@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PiCam Vision</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --panel: #111;
+      --border: #242424;
+      --accent: #e8ff00;
+      --copper: #e07040;
+      --aluminium: #aaccdd;
+      --iron: #8899aa;
+      --text: #c0c0c0;
+      --dim: #4a4a4a;
+      --mono: 'Share Tech Mono', monospace;
+      --display: 'Bebas Neue', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 56px 1fr 32px;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+      pointer-events: none; z-index: 999;
+    }
+
+    /* ── HEADER ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .logo { font-family: var(--display); font-size: 2rem; letter-spacing: 0.08em; color: #fff; }
+    .logo .v { color: var(--accent); }
+    .logo .sub { font-size: 1rem; color: var(--dim); margin-left: 0.3rem; }
+
+    .hdr-right { margin-left: auto; display: flex; gap: 1rem; align-items: center; font-size: 0.68rem; color: var(--dim); letter-spacing: 0.1em; }
+
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 5px var(--accent); animation: blink 2s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      display: grid;
+      grid-template-columns: 320px 1fr 280px;
+      overflow: hidden;
+    }
+
+    /* ── PANEL SHARED ── */
+    .panel { border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+    .panel:last-child { border-right: none; border-left: 1px solid var(--border); }
+
+    .panel-hdr {
+      padding: 0.7rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      color: var(--dim);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .panel-body { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 1rem; }
+    .panel-body::-webkit-scrollbar { width: 4px; }
+    .panel-body::-webkit-scrollbar-track { background: #111; }
+    .panel-body::-webkit-scrollbar-thumb { background: var(--border); }
+
+    /* ── SHOOT BUTTON ── */
+    #captureBtn {
+      width: 100%;
+      border: 2px solid var(--accent);
+      background: transparent;
+      color: var(--accent);
+      font-family: var(--display);
+      font-size: 1.8rem;
+      letter-spacing: 0.15em;
+      padding: 0.9rem 0;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: color 0.15s;
+    }
+    #captureBtn::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: var(--accent);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.18s ease;
+    }
+    #captureBtn:hover::before { transform: scaleX(1); }
+    #captureBtn:hover { color: #000; }
+    #captureBtn:active { transform: scale(0.98); }
+    #captureBtn span { position: relative; z-index: 1; }
+    #captureBtn.loading { pointer-events: none; border-color: var(--dim); color: var(--dim); }
+    #captureBtn.loading::before { transform: scaleX(0) !important; }
+
+    .progress { height: 2px; background: var(--border); overflow: hidden; display: none; }
+    .progress.active { display: block; }
+    .progress::after {
+      content: ''; display: block; height: 100%; width: 35%;
+      background: var(--accent); animation: sweep 1s linear infinite;
+    }
+    @keyframes sweep { from{transform:translateX(-100%)} to{transform:translateX(390%)} }
+
+    /* ── MATERIAL TABS ── */
+    .mat-tabs { display: flex; gap: 4px; }
+    .mat-tab {
+      flex: 1; padding: 0.4rem 0; text-align: center;
+      font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.1em;
+      border: 1px solid var(--border); background: transparent;
+      cursor: pointer; transition: all 0.15s; color: var(--dim);
+    }
+    .mat-tab[data-mat="copper"].active   { border-color: var(--copper);    color: var(--copper); }
+    .mat-tab[data-mat="aluminium"].active{ border-color: var(--aluminium); color: var(--aluminium); }
+    .mat-tab[data-mat="iron"].active     { border-color: var(--iron);      color: var(--iron); }
+
+    /* ── SLIDERS ── */
+    .slider-group { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .slider-row { display: flex; flex-direction: column; gap: 3px; }
+
+    .slider-label {
+      display: flex; justify-content: space-between;
+      font-size: 0.62rem; color: var(--dim); letter-spacing: 0.08em;
+    }
+
+    .slider-label span:last-child { color: var(--text); min-width: 30px; text-align: right; }
+
+    input[type=range] {
+      width: 100%; height: 4px;
+      -webkit-appearance: none;
+      background: var(--border);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid #000;
+    }
+
+    .slider-sep {
+      font-size: 0.6rem; letter-spacing: 0.15em; color: var(--dim);
+      padding: 0.3rem 0 0.1rem;
+      border-top: 1px solid var(--border);
+      margin-top: 0.3rem;
+    }
+
+    /* Re-analyze button */
+    #reanalyzeBtn {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      padding: 0.5rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    #reanalyzeBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+    #resetBtn {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      padding: 0.4rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    #resetBtn:hover { border-color: var(--accent2); color: #ff6644; }
+
+    /* ── VIEWER (MIDDLE) ── */
+    .viewer { display: flex; flex-direction: column; overflow: hidden; }
+
+    .view-toggle { display: flex; gap: 4px; }
+    .vtoggle {
+      font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em;
+      padding: 0.25rem 0.7rem; border: 1px solid var(--border);
+      background: transparent; color: var(--dim); cursor: pointer; transition: all 0.15s;
+    }
+    .vtoggle.active { border-color: var(--accent); color: var(--accent); }
+
+    .photo-stage {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+      background: radial-gradient(ellipse at 50% 50%, #181818 0%, #0d0d0d 100%);
+    }
+    .photo-stage::after {
+      content: ''; position: absolute; inset: 0;
+      background:
+        linear-gradient(to right, #0d0d0d 0%, transparent 3%),
+        linear-gradient(to left,  #0d0d0d 0%, transparent 3%),
+        linear-gradient(to bottom,#0d0d0d 0%, transparent 3%),
+        linear-gradient(to top,   #0d0d0d 0%, transparent 3%);
+      pointer-events: none;
+    }
+
+    .empty-state { text-align: center; color: var(--dim); }
+    .empty-state .icon { font-size: 3.5rem; opacity: 0.25; margin-bottom: 0.8rem; }
+    .empty-state p { font-size: 0.75rem; letter-spacing: 0.15em; }
+
+    #mainPhoto {
+      max-width: 100%; max-height: 100%;
+      object-fit: contain; display: none;
+      border: 1px solid var(--border);
+      box-shadow: 0 0 50px rgba(0,0,0,0.9);
+      animation: reveal 0.3s ease;
+    }
+    @keyframes reveal { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
+
+    .thumb-strip {
+      height: 80px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 1rem; overflow-x: auto; background: var(--panel);
+    }
+    .thumb-strip::-webkit-scrollbar { height: 3px; }
+    .thumb-strip::-webkit-scrollbar-thumb { background: var(--border); }
+
+    .thumb {
+      height: 65px; width: 90px; object-fit: cover;
+      border: 1px solid var(--border); cursor: pointer; flex-shrink: 0;
+      transition: border-color 0.15s, transform 0.15s; filter: brightness(.65);
+    }
+    .thumb:hover { border-color: var(--accent); filter: brightness(1); transform: scale(1.05); }
+    .thumb.active { border-color: var(--accent); filter: brightness(1); }
+
+    /* ── RIGHT PANEL: DETECTIONS ── */
+    .det-counters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .det-counter {
+      text-align: center; padding: 0.6rem 0.3rem;
+      border: 1px solid var(--border);
+    }
+    .det-counter-num { font-family: var(--display); font-size: 1.8rem; line-height: 1; }
+    .det-counter-num.copper    { color: var(--copper); }
+    .det-counter-num.aluminium { color: var(--aluminium); }
+    .det-counter-num.iron      { color: var(--iron); }
+    .det-counter-label { font-size: 0.58rem; color: var(--dim); letter-spacing: 0.1em; }
+
+    .det-list { display: flex; flex-direction: column; gap: 4px; flex: 1; overflow-y: auto; }
+
+    .det-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.45rem 0.6rem;
+      border: 1px solid var(--border);
+      font-size: 0.7rem;
+      animation: fadeIn 0.2s ease;
+    }
+    .det-item.copper    { border-left: 3px solid var(--copper); }
+    .det-item.aluminium { border-left: 3px solid var(--aluminium); }
+    .det-item.iron      { border-left: 3px solid var(--iron); }
+
+    .det-mat { flex: 1; text-transform: uppercase; }
+    .det-mat.copper    { color: var(--copper); }
+    .det-mat.aluminium { color: var(--aluminium); }
+    .det-mat.iron      { color: var(--iron); }
+    .det-info { color: var(--dim); font-size: 0.62rem; }
+
+    .det-empty { color: var(--dim); font-size: 0.7rem; padding: 0.5rem 0; }
+
+    @keyframes fadeIn { from{opacity:0;transform:translateX(6px)} to{opacity:1} }
+
+    .log { overflow-y: auto; font-size: 0.65rem; line-height: 1.9; flex: 1; min-height: 80px; }
+    .log-e { padding: 0.05rem 0; border-bottom: 1px solid #191919; color: var(--dim); }
+    .log-e.ok { color: #7dff7d; }
+    .log-e.err { color: #ff5533; }
+    .log-e.info { color: #44ccff; }
+
+    .flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 998; transition: opacity .05s; }
+    .flash.active { opacity: 0.45; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 0 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.62rem; color: var(--dim); letter-spacing: 0.08em;
+    }
+
+    #inferBadge { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<div class="flash" id="flash"></div>
+
+<header>
+  <div class="logo">PiCam <span class="v">VISION</span><span class="sub">· BALL DETECT</span></div>
+  <div class="hdr-right">
+    <div class="dot"></div>
+    <span id="clock">--:--:--</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── LEFT: CONTROLS + TUNING ── -->
+  <aside class="panel">
+    <div class="panel-hdr">⬤ Capture &amp; Tune</div>
+    <div class="panel-body">
+
+      <div>
+        <button id="captureBtn" onclick="capture()"><span id="btnText">⬤ SHOOT</span></button>
+        <div class="progress" id="progressBar"></div>
+      </div>
+
+      <!-- Material tabs -->
+      <div>
+        <div class="panel-hdr" style="border:none;padding:0 0 0.5rem;margin-bottom:0.4rem;">HSV Color Range</div>
+        <div class="mat-tabs">
+          <button class="mat-tab active" data-mat="copper"    onclick="switchTab('copper')">COPPER</button>
+          <button class="mat-tab"        data-mat="aluminium" onclick="switchTab('aluminium')">ALUM</button>
+          <button class="mat-tab"        data-mat="iron"      onclick="switchTab('iron')">IRON</button>
+        </div>
+      </div>
+
+      <div class="slider-group" id="sliderGroup">
+        <!-- Populated by JS -->
+      </div>
+
+      <button id="reanalyzeBtn" onclick="reanalyze()">↺ RE-ANALYZE LAST PHOTO</button>
+      <button id="resetBtn" onclick="resetParams()">RESET DEFAULTS</button>
+
+    </div>
+  </aside>
+
+  <!-- ── MIDDLE: VIEWER ── -->
+  <section class="viewer">
+    <div class="panel-hdr" style="border-bottom:1px solid var(--border); padding: 0.6rem 1rem;">
+      <div class="view-toggle">
+        <button class="vtoggle active" id="vResult" onclick="setView('result')">DETECTED</button>
+        <button class="vtoggle"        id="vRaw"    onclick="setView('raw')">RAW</button>
+      </div>
+      <span style="margin-left:auto; font-size:0.65rem; color:var(--dim)" id="currentFile">NO IMAGE</span>
+      <span id="inferBadge"></span>
+    </div>
+
+    <div class="photo-stage">
+      <div class="empty-state" id="emptyState">
+        <div class="icon">◎</div>
+        <p>SHOOT TO DETECT BEARING BALLS</p>
+      </div>
+      <img id="mainPhoto" alt="Result" />
+    </div>
+
+    <div class="thumb-strip" id="thumbStrip"></div>
+  </section>
+
+  <!-- ── RIGHT: DETECTIONS ── -->
+  <aside class="panel">
+    <div class="panel-hdr">◈ Detections</div>
+    <div class="panel-body">
+
+      <div class="det-counters">
+        <div class="det-counter">
+          <div class="det-counter-num copper"    id="cntCopper">0</div>
+          <div class="det-counter-label">COPPER</div>
+        </div>
+        <div class="det-counter">
+          <div class="det-counter-num aluminium" id="cntAluminium">0</div>
+          <div class="det-counter-label">ALUM</div>
+        </div>
+        <div class="det-counter">
+          <div class="det-counter-num iron"      id="cntIron">0</div>
+          <div class="det-counter-label">IRON</div>
+        </div>
+      </div>
+
+      <div class="det-list" id="detList">
+        <div class="det-empty">No detections yet</div>
+      </div>
+
+      <div style="flex:1; min-height:0; display:flex; flex-direction:column; gap:0.4rem;">
+        <div class="panel-hdr" style="border:none; padding:0;">EVENT LOG</div>
+        <div class="log" id="log"></div>
+      </div>
+
+    </div>
+  </aside>
+
+</main>
+
+<footer>
+  <span>COPPER · ALUMINIUM · IRON · HSV + HOUGH CIRCLES</span>
+  <span id="inferBadgeFooter">—</span>
+</footer>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────
+  let currentTab = 'copper';
+  let currentView = 'result';
+  let params = {};
+  let history = []; // [{raw, result, detections, elapsed}]
+  let totalCounts = { copper: 0, aluminium: 0, iron: 0 };
+
+  const SLIDER_DEFS = [
+    { key: 'h_low',   label: 'Hue Min',        min: 0,  max: 180 },
+    { key: 'h_high',  label: 'Hue Max',        min: 0,  max: 180 },
+    { key: 's_low',   label: 'Saturation Min', min: 0,  max: 255 },
+    { key: 's_high',  label: 'Saturation Max', min: 0,  max: 255 },
+    { key: 'v_low',   label: 'Brightness Min', min: 0,  max: 255 },
+    { key: 'v_high',  label: 'Brightness Max', min: 0,  max: 255 },
+    { key: 'min_r',   label: 'Circle Min Radius', min: 2, max: 150, sep: true },
+    { key: 'max_r',   label: 'Circle Max Radius', min: 5, max: 300 },
+  ];
+
+  // ── Clock ──────────────────────────────────────────────────────────────
+  setInterval(() => {
+    document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8);
+  }, 1000);
+
+  // ── Log ───────────────────────────────────────────────────────────────
+  function log(msg, type='') {
+    const el = document.getElementById('log');
+    const e = document.createElement('div');
+    e.className = 'log-e ' + type;
+    e.textContent = `[${new Date().toTimeString().slice(0,8)}] ${msg}`;
+    el.prepend(e);
+    while (el.children.length > 80) el.removeChild(el.lastChild);
+  }
+
+  // ── Flash ──────────────────────────────────────────────────────────────
+  function flash() {
+    const f = document.getElementById('flash');
+    f.classList.add('active');
+    setTimeout(() => f.classList.remove('active'), 100);
+  }
+
+  // ── Slider UI ──────────────────────────────────────────────────────────
+  function buildSliders() {
+    const group = document.getElementById('sliderGroup');
+    group.innerHTML = '';
+    const p = params[currentTab];
+    if (!p) return;
+
+    SLIDER_DEFS.forEach(def => {
+      const row = document.createElement('div');
+      row.className = 'slider-row';
+
+      if (def.sep) {
+        const sep = document.createElement('div');
+        sep.className = 'slider-sep';
+        sep.textContent = 'CIRCLE DETECTION';
+        group.appendChild(sep);
+      }
+
+      const val = p[def.key] ?? 0;
+      row.innerHTML = `
+        <div class="slider-label">
+          <span>${def.label}</span>
+          <span id="val_${def.key}">${val}</span>
+        </div>
+        <input type="range" min="${def.min}" max="${def.max}" value="${val}"
+               id="sl_${def.key}"
+               oninput="onSlider('${def.key}', this.value)" />
+      `;
+      group.appendChild(row);
+    });
+  }
+
+  function onSlider(key, value) {
+    const num = parseFloat(value);
+    params[currentTab][key] = num;
+    document.getElementById(`val_${key}`).textContent = num;
+    pushParams();
+  }
+
+  async function pushParams() {
+    try {
+      await fetch('/update_params', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+      });
+    } catch(e) {}
+  }
+
+  function switchTab(mat) {
+    currentTab = mat;
+    document.querySelectorAll('.mat-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.mat === mat);
+    });
+    buildSliders();
+  }
+
+  // ── View toggle ────────────────────────────────────────────────────────
+  function setView(mode) {
+    currentView = mode;
+    document.getElementById('vResult').classList.toggle('active', mode === 'result');
+    document.getElementById('vRaw').classList.toggle('active', mode === 'raw');
+    if (history.length === 0) return;
+    const entry = history[0];
+    const src = mode === 'result'
+      ? `/result/${entry.result}?t=${Date.now()}`
+      : `/raw/${entry.raw}?t=${Date.now()}`;
+    const img = document.getElementById('mainPhoto');
+    img.src = src;
+  }
+
+  // ── Show photo ─────────────────────────────────────────────────────────
+  function showEntry(entry) {
+    const img = document.getElementById('mainPhoto');
+    const empty = document.getElementById('emptyState');
+    const src = currentView === 'result'
+      ? `/result/${entry.result}?t=${Date.now()}`
+      : `/raw/${entry.raw}?t=${Date.now()}`;
+    img.src = src;
+    img.style.display = 'block';
+    empty.style.display = 'none';
+    document.getElementById('currentFile').textContent = entry.result;
+    renderDetections(entry.detections);
+    if (entry.elapsed !== undefined) {
+      const badge = document.getElementById('inferBadge');
+      badge.textContent = ` · ${entry.elapsed}s`;
+      document.getElementById('inferBadgeFooter').textContent = `LAST: ${entry.elapsed}s`;
+    }
+    document.querySelectorAll('.thumb').forEach(t => {
+      t.classList.toggle('active', t.dataset.file === entry.result);
+    });
+  }
+
+  function addThumb(entry) {
+    const strip = document.getElementById('thumbStrip');
+    const img = document.createElement('img');
+    img.className = 'thumb active';
+    img.src = `/result/${entry.result}?t=${Date.now()}`;
+    img.dataset.file = entry.result;
+    img.onclick = () => showEntry(entry);
+    strip.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+    strip.prepend(img);
+  }
+
+  // ── Detections panel ───────────────────────────────────────────────────
+  function renderDetections(detections) {
+    const list = document.getElementById('detList');
+    list.innerHTML = '';
+    if (!detections || detections.length === 0) {
+      list.innerHTML = '<div class="det-empty">No balls detected</div>';
+      return;
+    }
+    detections.forEach((d, i) => {
+      const item = document.createElement('div');
+      item.className = `det-item ${d.material}`;
+      const [x1, y1, x2, y2] = d.box;
+      const size = Math.round(d.radius * 2);
+      item.innerHTML = `
+        <div class="det-mat ${d.material}">${d.material}</div>
+        <div class="det-info">r=${d.radius}px · ${size}×${size}</div>
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  function updateCounts(detections) {
+    if (!detections) return;
+    detections.forEach(d => {
+      if (d.material in totalCounts) totalCounts[d.material]++;
+    });
+    document.getElementById('cntCopper').textContent    = totalCounts.copper;
+    document.getElementById('cntAluminium').textContent = totalCounts.aluminium;
+    document.getElementById('cntIron').textContent      = totalCounts.iron;
+  }
+
+  // ── Capture ────────────────────────────────────────────────────────────
+  async function capture() {
+    const btn = document.getElementById('captureBtn');
+    const btnText = document.getElementById('btnText');
+    const bar = document.getElementById('progressBar');
+    btn.classList.add('loading');
+    btnText.textContent = '◌ SCANNING...';
+    bar.classList.add('active');
+    log('Capture triggered', 'info');
+
+    try {
+      const res = await fetch('/capture', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        flash();
+        const entry = { raw: data.raw, result: data.result, detections: data.detections, elapsed: data.elapsed };
+        history.unshift(entry);
+        addThumb(entry);
+        showEntry(entry);
+        setView('result');
+        updateCounts(data.detections);
+        const n = data.detections.length;
+        log(`${n} ball${n!==1?'s':''} found · ${data.elapsed}s`, n > 0 ? 'ok' : '');
+        data.detections.forEach(d => log(`  → ${d.material} r=${d.radius}px`, 'ok'));
+      } else {
+        log(`Error: ${data.error}`, 'err');
+      }
+    } catch(e) {
+      log(`Network error: ${e.message}`, 'err');
+    } finally {
+      btn.classList.remove('loading');
+      btnText.textContent = '⬤ SHOOT';
+      bar.classList.remove('active');
+    }
+  }
+
+  // ── Re-analyze ─────────────────────────────────────────────────────────
+  async function reanalyze() {
+    log('Re-analyzing with current params...', 'info');
+    try {
+      const res = await fetch('/analyze', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        // Update the top entry's result
+        if (history.length > 0) {
+          history[0].result = data.result;
+          history[0].detections = data.detections;
+          history[0].elapsed = data.elapsed;
+          showEntry(history[0]);
+          // Update thumb
+          const thumbs = document.querySelectorAll('.thumb');
+          if (thumbs.length > 0) {
+            thumbs[0].src = `/result/${data.result}?t=${Date.now()}`;
+            thumbs[0].dataset.file = data.result;
+          }
+        }
+        const n = data.detections.length;
+        log(`Re-analyze: ${n} ball${n!==1?'s':''} · ${data.elapsed}s`, n > 0 ? 'ok' : '');
+        renderDetections(data.detections);
+      } else {
+        log(`Re-analyze error: ${data.error}`, 'err');
+      }
+    } catch(e) {
+      log(`Network error: ${e.message}`, 'err');
+    }
+  }
+
+  // ── Reset params ───────────────────────────────────────────────────────
+  async function resetParams() {
+    try {
+      const res = await fetch('/reset_params', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        params = data.params;
+        buildSliders();
+        log('Params reset to defaults', 'info');
+      }
+    } catch(e) {}
+  }
+
+  // ── Space shortcut ─────────────────────────────────────────────────────
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); capture(); }
+  });
+
+  // ── Init: load params + existing photos ────────────────────────────────
+  async function init() {
+    try {
+      const res = await fetch('/get_params');
+      params = await res.json();
+      buildSliders();
+    } catch(e) { log('Could not load params', 'err'); }
+
+    try {
+      const res = await fetch('/latest');
+      const data = await res.json();
+      if (data.results.length > 0) {
+        data.results.forEach(f => {
+          const raw = f.replace('result_', 'raw_');
+          history.push({ raw, result: f, detections: [], elapsed: null });
+        });
+        history.forEach(e => addThumb(e));
+        showEntry(history[0]);
+        log(`Loaded ${data.results.length} existing result(s)`, 'info');
+      }
+    } catch(e) {}
+  }
+  init();
+</script>
+</body>
+</html>
