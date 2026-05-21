@@ -24,5 +24,4 @@ print("Initializing your custom script...")
 cam = Camera()
 
 print("Snapping photo on Port 0...")
-cam.take_photo("helloworld.jpg")
-print("Perfect! helloworld.jpg has been saved.")
+cam.take_photo("HeiKO.jpg")
