@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PiCam Detect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --panel: #141414;
+      --border: #2a2a2a;
+      --accent: #e8ff00;
+      --accent2: #ff4400;
+      --accent3: #00e5ff;
+      --text: #c8c8c8;
+      --dim: #555;
+      --mono: 'Share Tech Mono', monospace;
+      --display: 'Bebas Neue', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .logo { font-family: var(--display); font-size: 2.4rem; letter-spacing: 0.08em; color: #fff; line-height: 1; }
+    .logo span { color: var(--accent3); }
+    .logo em { color: var(--accent); font-style: normal; }
+
+    .status-bar {
+      margin-left: auto;
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      font-size: 0.7rem;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+    }
+
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent3);
+      box-shadow: 0 0 6px var(--accent3);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .dot.warn { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    main {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      height: calc(100vh - 70px - 36px);
+    }
+
+    /* ── LEFT PANEL ── */
+    .controls {
+      border-right: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      overflow: hidden;
+    }
+
+    .section-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #captureBtn {
+      width: 100%;
+      background: transparent;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      font-family: var(--display);
+      font-size: 1.8rem;
+      letter-spacing: 0.15em;
+      padding: 1rem 0;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: color 0.15s;
+    }
+
+    #captureBtn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.2s ease;
+    }
+
+    #captureBtn:hover::before { transform: scaleX(1); }
+    #captureBtn:hover { color: #000; }
+    #captureBtn:active { transform: scale(0.98); }
+    #captureBtn span { position: relative; z-index: 1; }
+
+    #captureBtn.loading {
+      pointer-events: none;
+      border-color: var(--dim);
+      color: var(--dim);
+    }
+    #captureBtn.loading::before { transform: scaleX(0) !important; }
+
+    /* Progress bar for loading state */
+    .progress-bar {
+      height: 3px;
+      background: var(--border);
+      position: relative;
+      overflow: hidden;
+      display: none;
+    }
+    .progress-bar.active { display: block; }
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      left: -40%;
+      width: 40%;
+      height: 100%;
+      background: var(--accent3);
+      animation: scan 1.2s linear infinite;
+    }
+    @keyframes scan { to { left: 140%; } }
+
+    /* Model status badge */
+    .model-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.7rem;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--border);
+      color: var(--dim);
+    }
+    .model-badge.ok { border-color: #1a3a1a; color: #7dff7d; }
+    .model-badge.err { border-color: #3a1a1a; color: var(--accent2); }
+
+    /* Detection list */
+    .detections {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .det-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .det-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid var(--border);
+      font-size: 0.72rem;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .det-color { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .det-label { flex: 1; color: #fff; }
+    .det-conf { color: var(--accent); }
+
+    .det-empty { color: var(--dim); font-size: 0.72rem; padding: 0.5rem 0; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; } }
+
+    /* Counter row */
+    .counters {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .counter {
+      text-align: center;
+      padding: 0.7rem;
+      border: 1px solid var(--border);
+    }
+
+    .counter-num { font-family: var(--display); font-size: 2rem; color: #fff; line-height: 1; }
+    .counter-label { font-size: 0.6rem; color: var(--dim); letter-spacing: 0.12em; }
+
+    /* Log */
+    .log-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .log { flex: 1; overflow-y: auto; font-size: 0.68rem; line-height: 1.8; }
+    .log-entry { padding: 0.1rem 0; border-bottom: 1px solid #1a1a1a; color: var(--dim); }
+    .log-entry.ok { color: #7dff7d; }
+    .log-entry.err { color: var(--accent2); }
+    .log-entry.info { color: var(--accent3); }
+
+    /* ── RIGHT PANEL ── */
+    .viewer { display: flex; flex-direction: column; overflow: hidden; }
+
+    .viewer-header {
+      padding: 0.8rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.7rem;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+    }
+
+    .viewer-header .filename { margin-left: auto; color: var(--accent3); font-size: 0.72rem; }
+
+    /* Toggle raw/detected */
+    .toggle-group { display: flex; gap: 4px; }
+    .toggle-btn {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      padding: 0.3rem 0.7rem;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--dim);
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      transition: all 0.15s;
+    }
+    .toggle-btn.active { border-color: var(--accent3); color: var(--accent3); }
+
+    .photo-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(ellipse at 50% 50%, #1a1a1a 0%, #0d0d0d 100%);
+    }
+
+    .photo-stage::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to right, #0d0d0d 0%, transparent 3%),
+        linear-gradient(to left, #0d0d0d 0%, transparent 3%),
+        linear-gradient(to bottom, #0d0d0d 0%, transparent 3%),
+        linear-gradient(to top, #0d0d0d 0%, transparent 3%);
+      pointer-events: none;
+    }
+
+    .empty-state { text-align: center; color: var(--dim); }
+    .empty-state .icon { font-size: 4rem; margin-bottom: 1rem; opacity: 0.3; }
+    .empty-state p { font-size: 0.8rem; letter-spacing: 0.15em; }
+
+    #mainPhoto {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: none;
+      border: 1px solid var(--border);
+      box-shadow: 0 0 60px rgba(0,0,0,0.8);
+      animation: reveal 0.35s ease;
+    }
+
+    @keyframes reveal { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+
+    /* Thumb strip */
+    .thumb-strip {
+      height: 90px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 1.5rem;
+      overflow-x: auto;
+      background: var(--panel);
+    }
+    .thumb-strip::-webkit-scrollbar { height: 4px; }
+    .thumb-strip::-webkit-scrollbar-track { background: #111; }
+    .thumb-strip::-webkit-scrollbar-thumb { background: var(--border); }
+
+    .thumb {
+      height: 70px;
+      width: 100px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 0.15s, transform 0.15s;
+      filter: brightness(0.7);
+    }
+    .thumb:hover { border-color: var(--accent3); filter: brightness(1); transform: scale(1.04); }
+    .thumb.active { border-color: var(--accent3); filter: brightness(1); }
+
+    /* Inference time badge */
+    #inferBadge {
+      font-size: 0.65rem;
+      color: var(--accent3);
+      padding: 0.2rem 0.5rem;
+      border: 1px solid #1a2a2a;
+    }
+
+    /* Flash */
+    .flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 998; transition: opacity 0.05s; }
+    .flash.active { opacity: 0.5; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 0.6rem 2rem;
+      font-size: 0.65rem;
+      color: var(--dim);
+      letter-spacing: 0.1em;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+<div class="flash" id="flash"></div>
+
+<header>
+  <div class="logo">Pi<span>CAM</span> <em>DETECT</em></div>
+  <div class="status-bar">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusText">CHECKING MODEL...</span>
+    <span id="clock">--:--:--</span>
+  </div>
+</header>
+
+<main>
+  <aside class="controls">
+    <div>
+      <div class="section-label">Capture + Detect</div>
+      <button id="captureBtn" onclick="capture()">
+        <span id="btnText">⬤ SHOOT</span>
+      </button>
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="modelBadge" class="model-badge">
+      <span>◌</span> <span id="modelText">Loading model info...</span>
+    </div>
+
+    <div class="counters">
+      <div class="counter">
+        <div class="counter-num" id="shotCount">0</div>
+        <div class="counter-label">FRAMES</div>
+      </div>
+      <div class="counter">
+        <div class="counter-num" id="objCount">0</div>
+        <div class="counter-label">OBJECTS</div>
+      </div>
+    </div>
+
+    <div class="detections">
+      <div class="section-label">Last Detections</div>
+      <div class="det-list" id="detList">
+        <div class="det-empty">No detections yet</div>
+      </div>
+    </div>
+
+    <div class="log-wrap">
+      <div class="section-label">Event Log</div>
+      <div class="log" id="log"></div>
+    </div>
+  </aside>
+
+  <section class="viewer">
+    <div class="viewer-header">
+      <div class="toggle-group">
+        <button class="toggle-btn" id="btnDetected" onclick="setView('detected')">DETECTED</button>
+        <button class="toggle-btn active" id="btnRaw" onclick="setView('raw')">RAW</button>
+      </div>
+      <span id="inferBadge" style="display:none"></span>
+      <span class="filename" id="currentFile">NO IMAGE</span>
+    </div>
+
+    <div class="photo-stage">
+      <div class="empty-state" id="emptyState">
+        <div class="icon">◎</div>
+        <p>PRESS SHOOT TO CAPTURE + DETECT</p>
+      </div>
+      <img id="mainPhoto" alt="Captured photo" />
+    </div>
+
+    <div class="thumb-strip" id="thumbStrip"></div>
+  </section>
+</main>
+
+<footer>
+  <span>RASPBERRY PI · YOLOV8n ONNX · 80 CLASSES</span>
+  <span id="footerInfo">—</span>
+</footer>
+
+<script>
+  let shotCount = 0;
+  let totalObjects = 0;
+  let currentView = 'raw';  // 'raw' or 'detected'
+  const photoHistory = []; // [{raw, detected, detections, inference_ms}]
+
+  // Clock
+  setInterval(() => {
+    document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8);
+  }, 1000);
+  document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8);
+
+  // Check model status on load
+  async function checkModel() {
+    try {
+      const res = await fetch('/model_status');
+      const data = await res.json();
+      const badge = document.getElementById('modelBadge');
+      const dot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+      const modelText = document.getElementById('modelText');
+      if (data.loaded) {
+        badge.className = 'model-badge ok';
+        badge.innerHTML = '<span>✓</span> <span>YOLOv8n ONNX · READY</span>';
+        dot.classList.remove('warn');
+        statusText.textContent = 'MODEL LOADED';
+      } else {
+        badge.className = 'model-badge err';
+        badge.innerHTML = '<span>✗</span> <span>yolov8n.onnx NOT FOUND</span>';
+        dot.classList.add('warn');
+        statusText.textContent = 'MODEL MISSING';
+      }
+    } catch(e) {}
+  }
+  checkModel();
+
+  function log(msg, type = '') {
+    const el = document.getElementById('log');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry ' + type;
+    const t = new Date().toTimeString().slice(0,8);
+    entry.textContent = `[${t}] ${msg}`;
+    el.prepend(entry);
+    while (el.children.length > 60) el.removeChild(el.lastChild);
+  }
+
+  function flash() {
+    const f = document.getElementById('flash');
+    f.classList.add('active');
+    setTimeout(() => f.classList.remove('active'), 100);
+  }
+
+  // Stable color per label name
+  function labelColor(label) {
+    let hash = 0;
+    for (const c of label) hash = (hash * 31 + c.charCodeAt(0)) & 0xffffffff;
+    const r = ((hash >> 16) & 0x7f) + 80;
+    const g = ((hash >> 8)  & 0x7f) + 80;
+    const b = (hash         & 0x7f) + 80;
+    return `rgb(${r},${g},${b})`;
+  }
+
+  function renderDetections(detections) {
+    const list = document.getElementById('detList');
+    list.innerHTML = '';
+    if (!detections || detections.length === 0) {
+      list.innerHTML = '<div class="det-empty">No objects detected</div>';
+      return;
+    }
+    detections.forEach(d => {
+      const item = document.createElement('div');
+      item.className = 'det-item';
+      const color = labelColor(d.label);
+      item.innerHTML = `
+        <div class="det-color" style="background:${color}"></div>
+        <div class="det-label">${d.label}</div>
+        <div class="det-conf">${Math.round(d.confidence * 100)}%</div>
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  function setView(mode) {
+    currentView = mode;
+    document.getElementById('btnDetected').classList.toggle('active', mode === 'detected');
+    document.getElementById('btnRaw').classList.toggle('active', mode === 'raw');
+
+    if (photoHistory.length === 0) return;
+    const latest = photoHistory[0];
+    const src = mode === 'detected'
+      ? `/detected/${latest.detected}?t=${Date.now()}`
+      : `/photos/${latest.raw}?t=${Date.now()}`;
+    const img = document.getElementById('mainPhoto');
+    img.src = src;
+  }
+
+  function showPhoto(entry) {
+    const img = document.getElementById('mainPhoto');
+    const empty = document.getElementById('emptyState');
+    const src = currentView === 'detected'
+      ? `/detected/${entry.detected}?t=${Date.now()}`
+      : `/photos/${entry.raw}?t=${Date.now()}`;
+    img.src = src;
+    img.style.display = 'block';
+    empty.style.display = 'none';
+    document.getElementById('currentFile').textContent = entry.detected;
+    renderDetections(entry.detections);
+
+    const badge = document.getElementById('inferBadge');
+    if (entry.inference_ms !== undefined) {
+      badge.textContent = `${entry.inference_ms}s inference`;
+      badge.style.display = 'inline';
+    }
+
+    document.querySelectorAll('.thumb').forEach(t => {
+      t.classList.toggle('active', t.dataset.file === entry.detected);
+    });
+  }
+
+  function addThumb(entry) {
+    const strip = document.getElementById('thumbStrip');
+    const img = document.createElement('img');
+    img.className = 'thumb active';
+    img.src = `/detected/${entry.detected}?t=${Date.now()}`;
+    img.dataset.file = entry.detected;
+    img.title = entry.detected;
+    img.onclick = () => showPhoto(entry);
+    strip.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+    strip.prepend(img);
+  }
+
+  async function capture() {
+    const btn = document.getElementById('captureBtn');
+    const btnText = document.getElementById('btnText');
+    const bar = document.getElementById('progressBar');
+
+    btn.classList.add('loading');
+    btnText.textContent = '◌ DETECTING...';
+    bar.classList.add('active');
+    log('Shutter + inference triggered', 'info');
+
+    try {
+      const res = await fetch('/capture', { method: 'POST' });
+      const data = await res.json();
+
+      if (data.success) {
+        flash();
+        shotCount++;
+        totalObjects += data.detections.length;
+        document.getElementById('shotCount').textContent = shotCount;
+        document.getElementById('objCount').textContent = totalObjects;
+
+        const entry = {
+          raw: data.raw,
+          detected: data.detected,
+          detections: data.detections,
+          inference_ms: data.inference_ms
+        };
+        photoHistory.unshift(entry);
+        addThumb(entry);
+        showPhoto(entry);
+
+        // Auto-switch to detected view
+        setView('detected');
+
+        const n = data.detections.length;
+        log(`${n} object${n !== 1 ? 's' : ''} detected · ${data.inference_ms}s`, 'ok');
+        data.detections.forEach(d => {
+          log(`  → ${d.label} (${Math.round(d.confidence*100)}%)`, 'ok');
+        });
+        document.getElementById('footerInfo').textContent =
+          `LAST: ${n} obj · ${data.inference_ms}s`;
+      } else {
+        log(`Error: ${data.error}`, 'err');
+      }
+    } catch(e) {
+      log(`Network error: ${e.message}`, 'err');
+    } finally {
+      btn.classList.remove('loading');
+      btnText.textContent = '⬤ SHOOT';
+      bar.classList.remove('active');
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && e.target === document.body) {
+      e.preventDefault();
+      capture();
+    }
+  });
+
+  // Load existing detected photos on startup
+  async function loadExisting() {
+    try {
+      const res = await fetch('/latest');
+      const data = await res.json();
+      if (data.photos.length > 0) {
+        data.photos.forEach(f => {
+          const raw = f.replace('detected_', 'photo_');
+          const entry = { raw, detected: f, detections: [], inference_ms: null };
+          photoHistory.push(entry);
+          addThumb(entry);
+        });
+        showPhoto(photoHistory[0]);
+        shotCount = data.photos.length;
+        document.getElementById('shotCount').textContent = shotCount;
+        log(`Loaded ${data.photos.length} existing photo(s)`, 'info');
+      }
+    } catch(e) {}
+  }
+  loadExisting();
+</script>
+</body>
+</html>
