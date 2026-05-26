@@ -1,99 +1,54 @@
-# from adafruit_servokit import ServoKit
-# import time
+# Check: forward, backward, stop, quit works
 
-# kit = ServoKit(channels=16)
-# command = str(input("Enter command: "))
-
-# #Only for main engines for forword and backward motion = kit.servo[0]
-# servo0 = kit.servo[0]
-# servo1 = kit.servo[1]
-# servo2 = kit.servo[2]
-# servo3 = kit.servo[3]
-# servo4 = kit.servo[4]
-# servo5 = kit.servo[5]
-
-# #For locomotion servos
-# # servo6 = kit.servo[6]
-# # servo7 = kit.servo[7]
-# # servo8 = kit.servo[8]
-# # servo9 = kit.servo[9]
-# # servo10 = kit.servo[10]
-# # servo11 = kit.servo[11]
-
-
-# print("Moving forward script started... ")
-# print("Enter command: " + command)
-
-# while command == "forward":
-#     print("Engine1 drives 360 deg forward... ")
-#     servo0.angle = 0-180
-#     time.sleep(0.1)
-
-#     print("Engine2 drives 360 deg forward... ")
-#     servo1.angle = 360
-#     time.sleep(0.1)
-
-#     print("Engine3 drives 360 deg forward... ")
-#     servo2.angle = 360
-#     time.sleep(0.1)
-
-#     print("Engine4 drives 360 deg forward... ")
-#     servo3.angle = 360
-#     time.sleep(0.1)
-
-#     print("Engine5 drives 360 deg forward... ")
-#     servo4.angle = 360
-#     time.sleep(0.1)
-
-#     print("Engine6 drives 360 deg forward... ")
-#     servo5.angle = 360
-#     time.sleep(0.1)
-
-#     if command == "stop":
-#         print("Stopping all engines... ")
-#         servo0.angle = 90
-#         servo1.angle = 90
-#         servo2.angle = 90
-#         servo3.angle = 90
-#         servo4.angle = 90
-#         servo5.angle = 90
-#         break       
 
 from adafruit_servokit import ServoKit
 
 kit = ServoKit(channels=16)
 
-engines = [kit.servo[i] for i in range(6)]
+left_engines = [kit.servo[i] for i in range(3)]      # 0,1,2
+right_engines = [kit.servo[i] for i in range(3, 6)]  # 3,4,5
 
 STOP = 90
-FORWARD = 180
-BACKWARD = 0
+LEFT_FORWARD = 0
+LEFT_BACKWARD = 180
+RIGHT_FORWARD = 180
+RIGHT_BACKWARD = 0
 
-def set_all(speed):
-    for engine in engines:
-        engine.angle = speed
 
-while True:
-    command = input(
-        "Enter command (forward/backward/stop/quit): "
-    ).strip().lower()
+def set_drive(left_speed, right_speed):
+    for engine in left_engines:
+        engine.angle = left_speed
+    for engine in right_engines:
+        engine.angle = right_speed
 
-    if command == "forward":
-        print("Driving forward")
-        set_all(FORWARD)
+set_drive(STOP, STOP)
 
-    elif command == "backward":
-        print("Driving backward")
-        set_all(BACKWARD)
+try:
 
-    elif command == "stop":
-        print("Stopping")
-        set_all(STOP)
+    while True:
+        command = input("Enter command (forward/backward/stop/quit): ").strip().lower()
+        
 
-    elif command == "quit":
-        print("Exiting")
-        set_all(STOP)
-        break
+        if command == "forward":
+            print("Driving forward")
+            set_drive(LEFT_FORWARD, RIGHT_FORWARD)
 
-    else:
-        print("Unknown command")
+        elif command == "backward":
+            print("Driving backward")
+            set_drive(LEFT_BACKWARD, RIGHT_BACKWARD)
+
+        elif command == "stop":
+            print("Stopping")
+            set_drive(STOP, STOP)
+
+        elif command == "quit":
+            print("Exiting")
+            set_drive(STOP, STOP)
+            break
+
+        else:
+            print("Unknown command")
+
+except KeyboardInterrupt:
+    print("\nEmergency stop")
+    set_drive(STOP, STOP)
