@@ -17,6 +17,10 @@ while True:
 
     command = input("Enter command (forward_motion_mode/still_motion_mode): ").strip().lower()
 
+    if command not in ["forward_motion_mode", "still_motion_mode"]:
+        print("Error: Invalid command!")
+        continue
+
     match(command):
         case "forward_motion_mode":
             set_forward_motion_mode(True)

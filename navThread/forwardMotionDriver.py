@@ -39,16 +39,20 @@ while forwardMotionMode == True:
 
 
     if command == "forward":
-        set_drive(LEFT_FORWARD, RIGHT_FORWARD)
+        print("Forward motion activated. ")
+        #set_drive(LEFT_FORWARD, RIGHT_FORWARD)
 
     elif command == "backward":
-        set_drive(LEFT_BACKWARD, RIGHT_BACKWARD)
+        print("Backward motion activated. ")
+        #set_drive(LEFT_BACKWARD, RIGHT_BACKWARD)
 
     elif command == "stop":
-        set_drive(STOP, STOP)
+        print("Stop motion activated. ")
+        #set_drive(STOP, STOP)
 
     elif command == "quit":
-        set_drive(STOP, STOP)
+        print("Quit command received. ")
+        #set_drive(STOP, STOP)
         break
 
     else:

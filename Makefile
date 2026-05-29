@@ -11,7 +11,7 @@ build-roverpi:
 # Rebuild the docker image for roverPi and run the container.
 restart-roverpi:
 	docker compose down
-	docker compose up --build -d
+	docker compose up --build
 
 # Stops and removes conainers + orphans.
 stop-roverpi: 
