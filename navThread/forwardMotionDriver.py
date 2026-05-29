@@ -5,9 +5,10 @@ print("Starting forward motion driver...")
 
 try:
     from adafruit_servokit import ServoKit
-except Exception:
+    print("ServoKit imported successfully! ")
+except Exception as e:
+    print(f"ServoKit not available - running in mock mode: {e}")
     ServoKit = None
-    print("ServoKit not available - running in mock mode", flush=True)
 
 kit = ServoKit(channels=16)
 

@@ -7,6 +7,8 @@
 # Point turn: allows the robot to rotate around its own center with little or no forward movement, enabling zero-radius turning.
 # Crabbing: Crab steering aligns all wheels in the same direction, allowing the robot to move sideways or diagonally while maintaining its orientation.
 
+print("Starting locomotion controller...")
+
 from adafruit_servokit import ServoKit
 
 from enum import Enum
