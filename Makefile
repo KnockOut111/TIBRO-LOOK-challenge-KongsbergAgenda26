@@ -10,8 +10,7 @@ build-roverpi:
 
 # Rebuild the docker image for roverPi and run the container.
 restart-roverpi:
-	docker compose down
-	docker compose up --build
+	docker compose -f docker-compose.yml restart nav_thread
 
 # Stops and removes conainers + orphans.
 stop-roverpi: 
