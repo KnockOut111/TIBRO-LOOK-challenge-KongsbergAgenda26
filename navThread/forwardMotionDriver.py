@@ -25,7 +25,7 @@ def set_drive(left_speed, right_speed):
         engine.throttle = right_speed
 
 def stop_motion():
-    print
+    print("Rover stopped.")
     #set_drive(STOP, STOP)
 
 def forward_motion():

@@ -22,18 +22,15 @@ while True:
 
             if command == "forward":
                 forward_motion()
-                print("Rover moving forward...")
 
             elif command == "backward":
                 backward_motion()
-                print("Rover moving backward...")
 
             elif command == "stop":
                 stop_motion()
-                print("Rover stopped.")
 
             elif command == "quit":
-                stop_motion()
+                stop_motion() #could be we do not want it to stop when quitting forward motion mode, but for safety we will stop it here for now.
                 print("Exiting forward motion mode...")
                 raise SystemExit
 
