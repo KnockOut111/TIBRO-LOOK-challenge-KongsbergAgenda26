@@ -1,5 +1,5 @@
-# Check: forward, backward, stop, quit works
-
+# Working code for driving straight with 6 engines. 
+# Uses keyboard inputs forward, backward, stop and quit to control the engines.
 
 from adafruit_servokit import ServoKit
 

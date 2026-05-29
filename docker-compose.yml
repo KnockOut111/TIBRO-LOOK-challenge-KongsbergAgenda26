@@ -1,0 +1,66 @@
+# Remember to fix for virtuel environment and ROS workspace when running the docker container.
+
+services:
+  nav_thread:
+    build: 
+      context: .
+      dockerfile: navThread/Dockerfile
+    container_name: roverpi-nav_thread
+    privileged: true
+    devices:
+      - /dev/i2c-1:/dev/i2c-1
+    volumes:
+      - ./navThread:/app
+    working_dir: /app
+    environment:
+    - PYTHONUNBUFFERED=1
+    command: python3 -u roverPi_init.py  # Decides what is to run on startup, otherwise it will just run the default command which is to start a bash terminal
+
+# Running Visual SLAM, estimating the position (pose) of the rover and building a map of the environment. 
+  # mapping_thread:
+  #   build: .
+  #   container_name: roverpi-mapping_thread
+  #   privileged: true
+  #   devices:
+  #     - /dev/i2c-1:/dev/i2c-1
+  #   volumes:
+  #     - .:/app
+  #   working_dir: /app
+  #   command: python mappingThread.py  # Needs to set what is to run when the container starts, otherwise it will just run the default command which is to start a bash terminal
+
+## Given code (b):
+# IMU and magnetic detection data. Possibly also wheel odometry data, but currently not implemented. Missing encoders for this to work?
+  # sensor_thread:
+  #   build: .
+  #   container_name: roverpi-sensor_thread
+  #   privileged: true
+  #   devices:
+  #     - /dev/i2c-1:/dev/i2c-1
+  #   volumes:
+  #     - .:/app
+  #   working_dir: /app
+  #   command: python sensorThread.py  # Needs to set what is to run when the container starts, otherwise it will just run the default command which is to start a bash terminal
+
+#
+  # server_thread:
+  #   build: .
+  #   container_name: roverpi-server_thread
+  #   privileged: true
+  #   devices:
+  #     - /dev/i2c-1:/dev/i2c-1
+  #   volumes:
+  #     - .:/app
+  #   working_dir: /app
+  #   command: python serverThread.py  # Needs to set what is to run when the container starts, otherwise it will just run the default command which is to start a bash terminal
+
+# Posseble additional thread for finding the fastest path through the giving map in task 1. (RRT*)
+  # finding_shortest_path_thread:
+  #   build: .
+  #   container_name: roverpi-finding_shortest_path_thread
+  #   privileged: true
+  #   devices:
+  #     - /dev/i2c-1:/dev/i2c-1
+  #   volumes:
+  #     - .:/app
+  #   working_dir: /app
+  #   command: python findingShortestPathThread.py  # Needs to set what is to run when the container starts, otherwise it will just run the default command which is to start a bash terminal
