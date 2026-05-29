@@ -35,7 +35,8 @@ def set_drive(left_speed, right_speed):
 set_drive(STOP, STOP) # Remember this one to later as it may cause some logic issues
 
 while forwardMotionMode == True:
-    command = input("Enter command (forward/backward/stop/quit): ").strip().lower()
+    command = input("Enter command (forward/backward/stop/quit): ").strip().lower() # use later: command = os.getenv("ROVER_MODE", "still_motion_mode")
+
 
     if command == "forward":
         set_drive(LEFT_FORWARD, RIGHT_FORWARD)

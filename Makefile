@@ -5,7 +5,7 @@
 # Build the docker image for roverPi and run the container. Also shows the logs of the container.
 build-roverpi:
 	docker compose -f docker-compose.yml build
-	docker compose -f docker-compose.yml up -d
+	docker compose -f docker-compose.yml run --rm nav_thread 
 	docker compose -f docker-compose.yml logs -f
 
 # Rebuild the docker image for roverPi and run the container.
