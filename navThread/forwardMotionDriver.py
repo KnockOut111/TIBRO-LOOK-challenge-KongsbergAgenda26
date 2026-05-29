@@ -2,6 +2,7 @@
 # Uses keyboard inputs forward, backward, stop and quit to control the engines.
 
 print("Starting forward motion driver...")
+
 from adafruit_servokit import ServoKit
 
 
@@ -24,12 +25,15 @@ def set_drive(left_speed, right_speed):
         engine.throttle = right_speed
 
 def stop_motion():
-    set_drive(STOP, STOP)
+    print
+    #set_drive(STOP, STOP)
 
 def forward_motion():
-    set_drive(LEFT_FORWARD, RIGHT_FORWARD)
+    print("Moving forward...")
+    #set_drive(LEFT_FORWARD, RIGHT_FORWARD)
 
 def backward_motion():
-    set_drive(LEFT_BACKWARD, RIGHT_BACKWARD)
+    print("Moving backward...")
+    #set_drive(LEFT_BACKWARD, RIGHT_BACKWARD)
 
    
