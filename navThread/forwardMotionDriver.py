@@ -3,18 +3,11 @@
 
 print("Starting forward motion driver...")
 
-try:
-    from adafruit_servokit import ServoKit
-    print("ServoKit imported successfully! ")
-except Exception as e:
-    print(f"ServoKit not available - running in mock mode: {e}")
-    ServoKit = None
+from adafruit_servokit import ServoKit
 
 kit = ServoKit(channels=16)
-
 left_engines = [kit.continuous_servo[i] for i in range(3)]
 right_engines = [kit.continuous_servo[i] for i in range(3, 6)]
-
 forwardMotionMode = False
 
 # command = { forwardMotionMode: False/True, motion: forward/backward/stop/quit  }
@@ -42,7 +35,8 @@ def set_drive(left_speed, right_speed):
 set_drive(STOP, STOP) # Remember this one to later as it may cause some logic issues
 
 while forwardMotionMode == True:
-    command = input("Enter command (forward/backward/stop/quit): ").strip().lower()
+    command = input("Enter command (forward/backward/stop/quit): ").strip().lower() # use later: command = os.getenv("ROVER_MODE", "still_motion_mode")
+
 
     if command == "forward":
         set_drive(LEFT_FORWARD, RIGHT_FORWARD)
