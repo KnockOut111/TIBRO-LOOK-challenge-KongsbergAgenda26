@@ -6,30 +6,47 @@
 
 print("Starting mainLogic module...")
 
-from forwardMotionDriver import set_forward_motion_mode
+from forwardMotionDriver import forward_motion, backward_motion, stop_motion
 #from locomotionController import set_locomotion_mode, LocomotionModes
 
 
 # Main loop
 while True:
-    # Here we would have the logic for switching between different locomotion modes, 
-    # and for sending commands to the motors based on the current mode and the desired movement.
+    mode = input("Enter mode (forward_motion_mode/still_motion_mode/quit): ").strip().lower()
 
-    command = input("Enter command (forward_motion_mode/still_motion_mode): ").strip().lower()
+    if mode == "forward_motion_mode":
+        forward_motion()
 
-    if command not in ["forward_motion_mode", "still_motion_mode"]:
-        print("Error: Invalid command!")
-        continue
+        while True:
+            command = input("Forward mode active. Enter command (forward/backward/stop/quit): ").strip().lower()
 
-    match(command):
-        case "forward_motion_mode":
-            set_forward_motion_mode(True)
-            print("Forward motion activated. ")
-        case "still_motion_mode":
-            set_forward_motion_mode(False)
-            print("Forward motion deactivated. ")
+            if command == "forward":
+                forward_motion()
 
+            elif command == "backward":
+                backward_motion()
 
+            elif command == "stop":
+                stop_motion()
+                break
+
+            elif command == "quit":
+                stop_motion()
+                raise SystemExit
+
+            else:
+                print("Error: unknown command!")
+
+    elif mode == "still_motion_mode":
+        stop_motion()
+        print("Still motion mode activated.")
+
+    elif mode == "quit":
+        stop_motion()
+        break
+
+    else:
+        print("Error: invalid mode!")
 
     # case "locomotion_mode":
     #     set_locomotion_mode(LocomotionModes.ACKERMANN)
