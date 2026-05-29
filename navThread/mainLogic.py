@@ -15,23 +15,26 @@ while True:
     mode = input("Enter mode (forward_motion_mode/still_motion_mode/quit): ").strip().lower()
 
     if mode == "forward_motion_mode":
-        forward_motion()
+        stop_motion() #forward_motion()
 
         while True:
             command = input("Forward mode active. Enter command (forward/backward/stop/quit): ").strip().lower()
 
             if command == "forward":
                 forward_motion()
+                print("Rover moving forward...")
 
             elif command == "backward":
                 backward_motion()
+                print("Rover moving backward...")
 
             elif command == "stop":
                 stop_motion()
-                break
+                print("Rover stopped.")
 
             elif command == "quit":
                 stop_motion()
+                print("Exiting forward motion mode...")
                 raise SystemExit
 
             else:
