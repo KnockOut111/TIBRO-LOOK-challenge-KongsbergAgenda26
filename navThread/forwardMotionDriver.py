@@ -3,18 +3,11 @@
 
 print("Starting forward motion driver...")
 
-try:
-    from adafruit_servokit import ServoKit
-    print("ServoKit imported successfully! ")
-except Exception as e:
-    print(f"ServoKit not available - running in mock mode: {e}")
-    ServoKit = None
+from adafruit_servokit import ServoKit
 
 kit = ServoKit(channels=16)
-
 left_engines = [kit.continuous_servo[i] for i in range(3)]
 right_engines = [kit.continuous_servo[i] for i in range(3, 6)]
-
 forwardMotionMode = False
 
 # command = { forwardMotionMode: False/True, motion: forward/backward/stop/quit  }
