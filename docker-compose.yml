@@ -17,7 +17,6 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/app
-      - BLINKA_FORCEBOARD=RASPBERRY_PI_5B
       - BLINKA_FORCECHIP=BCM2XXX    
     command: python3 -u roverPi_init.py  # Decides what is to run on startup, otherwise it will just run the default command which is to start a bash terminal
 
