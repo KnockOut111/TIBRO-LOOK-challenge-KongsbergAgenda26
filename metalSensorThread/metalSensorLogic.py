@@ -39,12 +39,12 @@ class MetalSensorNode(Node):
 			) from GPIO_IMPORT_ERROR
 
 		self.devices = {}
-		self.publishers = {}
+		self.topic_publishers = {}
 
 		for pin in pins:
 			self.devices[pin] = DigitalInputDevice(pin, pull_up=pull_up)
 			topic_name = f"metal_sensor/gpio{pin}"
-			self.publishers[pin] = self.create_publisher(Bool, topic_name, 10)
+			self.topic_publishers[pin] = self.create_publisher(Bool, topic_name, 10)
 
 		timer_period = 1.0 / publish_rate_hz if publish_rate_hz > 0 else 0.1
 		self.timer = self.create_timer(timer_period, self.publish_states)
@@ -57,7 +57,7 @@ class MetalSensorNode(Node):
 		for pin, device in self.devices.items():
 			msg = Bool()
 			msg.data = bool(device.value)
-			self.publishers[pin].publish(msg)
+			self.topic_publishers[pin].publish(msg)
 
 	def destroy_node(self):
 		for device in self.devices.values():
