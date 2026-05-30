@@ -1,22 +1,20 @@
-FROM python:3.12-slim
+FROM ros:jazzy-ros-base
 
 WORKDIR /app
 
-# Install system deps commonly needed for hardware access and building wheels
+# Install hardware-related Python support
 RUN apt-get update && apt-get install -y \
+    python3-gpiozero \
     i2c-tools \
-    gcc \
-    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python deps
+# Copy requirements and install pip-only deps
 COPY metalSensorThread/requirements.txt /tmp/requirements.txt
 
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 
 # Copy sources
 COPY metalSensorThread/ /app/
 
 # Default command runs the metal sensor node
-CMD ["python3", "metalSensorLogic.py"]
+CMD ["bash", "-lc", "source /opt/ros/jazzy/setup.bash && python3 metalSensorLogic.py"]
