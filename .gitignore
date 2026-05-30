@@ -95,8 +95,12 @@ picam_server/photos_detected/*
 picam_server/photos_vision_raw/*
 picam_server/photos_vision_result/*
 
+piImages/*
+
 # Keep folders in git
 !picam_server/photos/.gitkeep
 !picam_server/photos_detected/.gitkeep
 !picam_server/photos_vision_raw/.gitkeep
 !picam_server/photos_vision_result/.gitkeep
+
+!piImages/.gitkeep
