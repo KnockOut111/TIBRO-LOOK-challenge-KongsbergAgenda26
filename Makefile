@@ -31,3 +31,22 @@ build-from-scratch:
 	docker compose -f docker-compose.yml build --no-cache
 	docker compose -f docker-compose.yml up -d
 	docker compose -f docker-compose.yml logs -f
+
+
+# Metal sensor docker targets
+metal-sensor-build:
+	docker compose -f docker-compose.yml build metal_sensor_thread
+	docker compose -f docker-compose.yml run --rm metal_sensor_thread
+	docker compose -f docker-compose.yml logs -f
+
+metal-sensor-restart:
+	docker compose -f docker-compose.yml restart metal_sensor_thread
+
+metal-sensor-stop:
+	docker compose -f docker-compose.yml stop metal_sensor_thread
+
+metal-sensor-clean:
+	docker compose -f docker-compose.yml down -v --remove-orphans
+
+metal-sensor-logs:
+	docker compose -f docker-compose.yml logs -f metal_sensor_thread
