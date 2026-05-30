@@ -1,1 +1,1 @@
-gpiozero
+# gpiozero is installed via apt in the Dockerfile
