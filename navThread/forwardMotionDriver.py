@@ -12,10 +12,10 @@ left_engines = [kit.continuous_servo[i] for i in range(3)]
 right_engines = [kit.continuous_servo[i] for i in range(3, 6)]
 
 STOP = -1
-LEFT_FORWARD = 1
-LEFT_BACKWARD = 0
-RIGHT_FORWARD = 0
-RIGHT_BACKWARD = 1
+LEFT_FORWARD = 0
+LEFT_BACKWARD = 1
+RIGHT_FORWARD = 1
+RIGHT_BACKWARD = 0
 
 #FUNCTIONS
 def set_drive(left_speed, right_speed):
