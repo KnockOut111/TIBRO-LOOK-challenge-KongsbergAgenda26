@@ -30,6 +30,7 @@ services:
     working_dir: /app
     environment:
       - PYTHONUNBUFFERED=1
+      - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
     command: python3 -u metalSensorLogic.py
 
 # Running Visual SLAM, estimating the position (pose) of the rover and building a map of the environment. 
