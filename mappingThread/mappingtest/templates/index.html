@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi RealSense Live Room Map</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #111; font-family: sans-serif;}
+        #info { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 5px; pointer-events: none;}
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body>
+
+    <div id="info">
+        <h3>Live Room Scanner</h3>
+        <p>Status: <span id="status" style="color: orange;">Connecting...</span></p>
+        <p>Resolution: 480x270 @ 6FPS</p>
+        <p>Rotate / Zoom using your mouse.</p>
+    </div>
+
+    <script>
+        // 1. Setup the 3D Scene Environment
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Position camera looking down slightly at the origin
+        camera.position.set(0, 2, 5);
+        camera.lookAt(0, 0, 0);
+
+        // Add a visual grid floor for spatial orientation
+        const gridHelper = new THREE.GridHelper(10, 10, 0xff0000, 0x444444);
+        scene.add(gridHelper);
+
+        // 2. Setup Persistent Point Cloud Storage
+        const MAX_POINTS = 100000; // Cap max points in browser memory to avoid lag
+        const positions = new Float32Array(MAX_POINTS * 3);
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        
+        // Render points as tiny glowing green squares
+        const material = new THREE.PointsMaterial({ color: 0x00ff00, size: 0.03 });
+        const pointCloud = new THREE.Points(geometry, material);
+        scene.add(pointCloud);
+
+        let pointCount = 0;
+
+        // 3. Connect to the Raspberry Pi over WebSockets
+        const socket = io();
+
+        socket.on('connect', () => {
+            document.getElementById('status').innerText = "Connected & Streaming";
+            document.getElementById('status').style.color = "lightgreen";
+        });
+
+        socket.on('new_points', (data) => {
+            const incomingPoints = data.points;
+            const posAttribute = geometry.attributes.position;
+
+            // Append incoming 3D coordinates into our existing buffer map
+            for (let i = 0; i < incomingPoints.length; i += 3) {
+                let index = pointCount * 3;
+                
+                posAttribute.array[index] = incomingPoints[i];     // X
+                posAttribute.array[index + 1] = -incomingPoints[i+1]; // Y (invert for Three.js coordinate space)
+                posAttribute.array[index + 2] = -incomingPoints[i+2]; // Z 
+
+                pointCount++;
+                // If map fills up, wrap around memory buffer
+                if (pointCount >= MAX_POINTS) pointCount = 0;
+            }
+
+            // Tell Three.js to re-render the updated cloud map
+            posAttribute.needsUpdate = true;
+        });
+
+        // Simple mouse interaction variables to rotate camera around the room
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        
+        document.addEventListener('mousedown', () => isDragging = true);
+        document.addEventListener('mouseup', () => isDragging = false);
+        document.addEventListener('mousemove', (e) => {
+            if(isDragging) {
+                const deltaMove = { x: e.offsetX - previousMousePosition.x, y: e.offsetY - previousMousePosition.y };
+                pointCloud.rotation.y += deltaMove.x * 0.005;
+                pointCloud.rotation.x += deltaMove.y * 0.005;
+            }
+            previousMousePosition = { x: e.offsetX, y: e.offsetY };
+        });
+
+        // Render Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Handle browser window resizing gracefully
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

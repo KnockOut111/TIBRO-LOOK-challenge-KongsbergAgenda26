@@ -16,6 +16,7 @@ services:
     - PYTHONUNBUFFERED=1
     command: python3 -u roverPi_init.py  # Decides what is to run on startup, otherwise it will just run the default command which is to start a bash terminal
 
+
 # Running Visual SLAM, estimating the position (pose) of the rover and building a map of the environment. 
   # mapping_thread:
   #   build: .
