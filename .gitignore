@@ -75,3 +75,16 @@ qtcreator-*
 /planning/cfg/
 /planning/docs/
 /planning/src/
+
+# --- Images and maps created ---
+# Generated images
+images/*
+!images/.gitkeep
+
+# Camera captures
+captures/*
+!captures/.gitkeep
+
+# Maps
+maps/*
+!maps/.gitkeep
