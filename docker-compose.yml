@@ -9,11 +9,16 @@ services:
     privileged: true
     devices:
       - /dev/i2c-1:/dev/i2c-1
+      - /dev/gpiomem:/dev/gpiomem
+      - /dev/mem:/dev/mem
     volumes:
       - ./navThread:/app
     working_dir: /app
     environment:
-    - PYTHONUNBUFFERED=1
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+      - BLINKA_FORCEBOARD=RASPBERRY_PI_5B
+      - BLINKA_FORCECHIP=BCM2XXX    
     command: python3 -u roverPi_init.py  # Decides what is to run on startup, otherwise it will just run the default command which is to start a bash terminal
 
   metal_sensor_thread:

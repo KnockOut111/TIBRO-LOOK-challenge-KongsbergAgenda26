@@ -1,18 +1,15 @@
-FROM python:3.12-slim
+FROM ros:jazzy-ros-base
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    i2c-tools \
-    gcc \
-    python3-dev \
+COPY requirements.txt .
+RUN apt update && apt install -y \
+    python3-pip \
+    python3-colcon-common-extensions \
     && rm -rf /var/lib/apt/lists/*
 
-COPY navThread/requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r /tmp/requirements.txt
+COPY . .
 
-COPY navThread/ /app/
-
-CMD ["python", "roverPi_init.py"]
+CMD ["python3", "-u", "roverPi_init.py"]
