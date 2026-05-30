@@ -22,6 +22,7 @@ services:
       dockerfile: metalSensorThread/Dockerfile
     container_name: roverpi-metal_sensor_thread
     privileged: true
+    network_mode: host
     devices:
       - /dev/gpiomem:/dev/gpiomem
     volumes:
