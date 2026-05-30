@@ -1,92 +1,99 @@
-# Main logic for the navigation thread. 
-# This file is responsible for controlling the locomotion of the robot, 
-# and will use the locomotionController and forwardMotionDriver to achieve this. 
-# It will also handle the logic for switching between different locomotion modes, 
-# and will be responsible for sending commands to the motors based on the current mode and the desired movement.
+from enum import Enum
 
-print("Starting mainLogic module...")
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
 
-#from forwardMotionDriver import forward_motion, backward_motion, stop_motion
-from locomotionController import LocomotionController, LocomotionModes
 
-controller = LocomotionController()
+class LocomotionModes(Enum):
+    ACKERMANN = 0
+    POINT_TURN = 1
+    CRABBING = 2
 
-def set_locomotion_mode():
-    mode = input("Enter locomotion mode (ackermann/point_turn/crabbing): ").strip().lower()
+#remember to implement functionality for the different logic steps (was commented out in local file.)
 
-    if mode == "ackermann":
-        #controller.set_mode(LocomotionModes.ACKERMANN)
-        print("Ackermann mode activated.")
-            
-    elif mode == "point_turn":
-        #controller.set_mode(LocomotionModes.POINT_TURN)
-        print("Point turn mode activated.")
+class MainLogicNode(Node):
+    def __init__(self):
+        super().__init__("main_logic")
 
-    elif mode == "crabbing":
-        #controller.set_mode(LocomotionModes.CRABBING)
-        print("Crabbing mode activated.")
+        self.active = False
+        self.locomotion_mode = LocomotionModes.ACKERMANN
 
-    else:
-        print("Error: invalid locomotion mode!")
-        return False
+        self.create_subscription(String, "/rover/mode", self.mode_callback, 10)
+        self.create_subscription(String, "/rover/locomotion_mode", self.locomotion_callback, 10)
+        self.create_subscription(String, "/rover/command", self.command_callback, 10)
 
-    return True
+        self.get_logger().info("main_logic node started")
 
-# Main loop
-def main():
-
-    while True:
-        mode = input("Enter mode (launch/quit): ").strip().lower()
+    def mode_callback(self, msg):
+        mode = msg.data.strip().lower()
 
         if mode == "launch":
-            if not set_locomotion_mode():
-                continue
-            #controller.stop() #forward_motion() #remove later????
-            print("Rover launched. Awaiting commands...")
-
-            while True:
-                command = input("The roverPi is launched and in active state. Enter command (forward/backward/stop/left_turn/right_turn/change_locomotion/quit): ").strip().lower()
-
-                if command == "forward":
-                    #controller.forward()
-                    print("Moving forward...")
-
-                elif command == "backward":
-                    #controller.backward()
-                    print("Moving backward...")
-
-                elif command == "stop":
-                    #controller.stop()
-                    print("Rover stopped.")
-
-                elif command == "left_turn":
-                    #controller.set_all_steering(90 - 45)  # Example angle, adjust as needed
-                    print("Turning left...")
-
-                elif command == "right_turn":
-                    #controller.set_all_steering(90 + 45)  # Example angle, adjust as needed
-                    print("Turning right...")
-
-                elif command == "change_locomotion":
-                    set_locomotion_mode()
-                    print("Locomotion mode changed.")
-                    continue
-
-                elif command == "quit":
-                    #controller.stop()
-                    print("Exiting program...")
-                    raise SystemExit
-
-                else:
-                    print("Error: unknown command!")
+            self.active = True
+            self.get_logger().info("Rover launched")
 
         elif mode == "quit":
-            #controller.stop()
-            print("Exiting program...")
-            raise SystemExit
+            self.active = False
+            self.get_logger().info("Rover stopped")
 
         else:
-            print("Error: invalid mode!")
+            self.get_logger().warn(f"Invalid mode: {mode}")
+
+    def locomotion_callback(self, msg):
+        mode = msg.data.strip().lower()
+
+        if mode == "ackermann":
+            self.locomotion_mode = LocomotionModes.ACKERMANN
+
+        elif mode == "point_turn":
+            self.locomotion_mode = LocomotionModes.POINT_TURN
+
+        elif mode == "crabbing":
+            self.locomotion_mode = LocomotionModes.CRABBING
+
+        else:
+            self.get_logger().warn(f"Invalid locomotion mode: {mode}")
+            return
+
+        self.get_logger().info(f"Locomotion mode set to {self.locomotion_mode.name}")
+
+    def command_callback(self, msg):
+        command = msg.data.strip().lower()
+
+        if not self.active:
+            self.get_logger().warn("Ignoring command because rover is not launched")
+            return
+
+        # Implement missing command handling logic here, e.g.:
+        if command == "forward":
+            self.get_logger().info("Moving forward")
+
+        elif command == "backward":
+            self.get_logger().info("Moving backward")
+
+        elif command == "stop":
+            self.get_logger().info("Stopping rover")
+
+        elif command == "left_turn":
+            self.get_logger().info("Turning left")
+
+        elif command == "right_turn":
+            self.get_logger().info("Turning right")
+
+        else:
+            self.get_logger().warn(f"Unknown command: {command}")
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = MainLogicNode()
+
+    try:
+        rclpy.spin(node)
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
 
 if __name__ == "__main__":
     main()
