@@ -35,9 +35,12 @@ build-from-scratch:
 
 # Metal sensor docker targets
 metal-sensor-build:
-	docker compose -f docker-compose.yml build metal_sensor_thread
-	docker compose -f docker-compose.yml run --rm metal_sensor_thread
-	docker compose -f docker-compose.yml logs -f
+	docker compose -f docker-compose.yml up -d --build metal_sensor_thread
+	docker compose -f docker-compose.yml logs -f metal_sensor_thread
+
+metal-sensor-install-host:
+	sudo apt update
+	sudo apt install -y python3-gpiozero
 
 metal-sensor-restart:
 	docker compose -f docker-compose.yml restart metal_sensor_thread
