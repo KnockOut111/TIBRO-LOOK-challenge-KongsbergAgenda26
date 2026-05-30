@@ -6,47 +6,87 @@
 
 print("Starting mainLogic module...")
 
-from forwardMotionDriver import forward_motion, backward_motion, stop_motion
-#from locomotionController import set_locomotion_mode, LocomotionModes
+#from forwardMotionDriver import forward_motion, backward_motion, stop_motion
+from locomotionController import LocomotionController, LocomotionModes
 
+controller = LocomotionController()
 
-# Main loop
-while True:
-    mode = input("Enter mode (forward_motion_mode/still_motion_mode/quit): ").strip().lower()
+def set_locomotion_mode():
+    mode = input("Enter locomotion mode (ackermann/point_turn/crabbing): ").strip().lower()
 
-    if mode == "forward_motion_mode":
-        stop_motion() #forward_motion()
+    if mode == "ackermann":
+        #controller.set_mode(LocomotionModes.ACKERMANN)
+        print("Ackermann mode activated.")
+            
+    elif mode == "point_turn":
+        #controller.set_mode(LocomotionModes.POINT_TURN)
+        print("Point turn mode activated.")
 
-        while True:
-            command = input("Forward mode active. Enter command (forward/backward/stop/quit): ").strip().lower()
-
-            if command == "forward":
-                forward_motion()
-
-            elif command == "backward":
-                backward_motion()
-
-            elif command == "stop":
-                stop_motion()
-
-            elif command == "quit":
-                stop_motion() #could be we do not want it to stop when quitting forward motion mode, but for safety we will stop it here for now.
-                print("Exiting forward motion mode...")
-                raise SystemExit
-
-            else:
-                print("Error: unknown command!")
-
-    elif mode == "still_motion_mode":
-        stop_motion()
-        print("Still motion mode activated.")
-
-    elif mode == "quit":
-        stop_motion()
-        break
+    elif mode == "crabbing":
+        #controller.set_mode(LocomotionModes.CRABBING)
+        print("Crabbing mode activated.")
 
     else:
-        print("Error: invalid mode!")
+        print("Error: invalid locomotion mode!")
+        return False
 
-    # case "locomotion_mode":
-    #     set_locomotion_mode(LocomotionModes.ACKERMANN)
+    return True
+
+# Main loop
+def main():
+
+    while True:
+        mode = input("Enter mode (launch/quit): ").strip().lower()
+
+        if mode == "launch":
+            if not set_locomotion_mode():
+                continue
+            #controller.stop() #forward_motion() #remove later????
+            print("Rover launched. Awaiting commands...")
+
+            while True:
+                command = input("The roverPi is launched and in active state. Enter command (forward/backward/stop/left_turn/right_turn/change_locomotion/quit): ").strip().lower()
+
+                if command == "forward":
+                    #controller.forward()
+                    print("Moving forward...")
+
+                elif command == "backward":
+                    #controller.backward()
+                    print("Moving backward...")
+
+                elif command == "stop":
+                    #controller.stop()
+                    print("Rover stopped.")
+
+                elif command == "left_turn":
+                    #controller.set_all_steering(90 - 45)  # Example angle, adjust as needed
+                    print("Turning left...")
+
+                elif command == "right_turn":
+                    #controller.set_all_steering(90 + 45)  # Example angle, adjust as needed
+                    print("Turning right...")
+
+                elif command == "change_locomotion":
+                    set_locomotion_mode()
+                    print("Locomotion mode changed.")
+                    continue
+
+                elif command == "quit":
+                    #controller.stop()
+                    print("Exiting program...")
+                    raise SystemExit
+
+                else:
+                    print("Error: unknown command!")
+
+        elif mode == "quit":
+            #controller.stop()
+            print("Exiting program...")
+            raise SystemExit
+
+        else:
+            print("Error: invalid mode!")
+
+if __name__ == "__main__":
+    main()

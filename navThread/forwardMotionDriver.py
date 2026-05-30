@@ -6,7 +6,7 @@ print("Starting forward motion driver...")
 from adafruit_servokit import ServoKit
 
 
-kit = ServoKit(channels=16)
+self.kit = ServoKit(channels=16)
 
 left_engines = [kit.continuous_servo[i] for i in range(3)]
 right_engines = [kit.continuous_servo[i] for i in range(3, 6)]
@@ -35,5 +35,7 @@ def forward_motion():
 def backward_motion():
     print("Moving backward...")
     set_drive(LEFT_BACKWARD, RIGHT_BACKWARD)
+
+    
 
    

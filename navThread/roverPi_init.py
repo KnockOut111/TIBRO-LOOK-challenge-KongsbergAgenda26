@@ -1,12 +1,12 @@
-
-import mainLogic 
+from mainLogic import main
 import time 
 
-
-print("Initializing roverPi navThread... ")
-
-time.sleep(1)
-print("Initializing of tibro-roverPi is completed. ")
+def init_roverPi():
+    print("Initializing roverPi navThread... ")
+    time.sleep(1)
+    #Need to implement initialization logic here
+    print("Initializing of tibro-roverPi is completed. ")
 
 if __name__ == "__main__":
-    mainLogic() #Call differently???
+    init_roverPi()
+    main() 
