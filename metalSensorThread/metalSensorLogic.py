@@ -9,6 +9,7 @@ each pin so other ROS 2 nodes can subscribe to the status independently.
 
 import rclpy
 from rclpy.node import Node
+from rclpy.executors import ExternalShutdownException
 
 from std_msgs.msg import Bool
 
@@ -71,11 +72,14 @@ def main():
 
 	try:
 		rclpy.spin(node)
+	except ExternalShutdownException:
+		pass
 	except KeyboardInterrupt:
 		pass
 	finally:
 		node.destroy_node()
-		rclpy.shutdown()
+		if rclpy.ok():
+			rclpy.shutdown()
 
 
 if __name__ == "__main__":
