@@ -17,15 +17,15 @@ def set_locomotion_mode():
     mode = input("Enter locomotion mode (ackermann/point_turn/crabbing): ").strip().lower()
 
     if mode == "ackermann":
-        #controller.set_mode(LocomotionModes.ACKERMANN)
+        controller.set_mode(LocomotionModes.ACKERMANN)
         print("Ackermann mode activated.")
             
     elif mode == "point_turn":
-        #controller.set_mode(LocomotionModes.POINT_TURN)
+        controller.set_mode(LocomotionModes.POINT_TURN)
         print("Point turn mode activated.")
 
     elif mode == "crabbing":
-        #controller.set_mode(LocomotionModes.CRABBING)
+        controller.set_mode(LocomotionModes.CRABBING)
         print("Crabbing mode activated.")
 
     else:
@@ -43,30 +43,30 @@ def main():
         if mode == "launch":
             if not set_locomotion_mode():
                 continue
-            #controller.stop() #forward_motion() #remove later????
+            controller.stop() #forward_motion() #remove later????
             print("Rover launched. Awaiting commands...")
 
             while True:
                 command = input("The roverPi is launched and in active state with locomotion mode: " + str(controller.get_mode()) + ". Enter command (forward/backward/stop/left_turn/right_turn/change_locomotion/quit): ").strip().lower()
 
                 if command == "forward":
-                    #controller.forward()
+                    controller.forward()
                     print("Moving forward...")
 
                 elif command == "backward":
-                    #controller.backward()
+                    controller.backward()
                     print("Moving backward...")
 
                 elif command == "stop":
-                    #controller.stop()
+                    controller.stop()
                     print("Rover stopped.")
 
                 elif command == "left_turn":
-                    #controller.set_all_steering(90 - 45)  # Example angle, adjust as needed
+                    controller.set_all_steering(90 - 45)  # Example angle, adjust as needed
                     print("Turning left...")
 
                 elif command == "right_turn":
-                    #controller.set_all_steering(90 + 45)  # Example angle, adjust as needed
+                    controller.set_all_steering(90 + 45)  # Example angle, adjust as needed
                     print("Turning right...")
 
                 elif command == "change_locomotion":
@@ -75,7 +75,7 @@ def main():
                     continue
 
                 elif command == "quit":
-                    #controller.stop()
+                    controller.stop()
                     print("Exiting program...")
                     raise SystemExit
 
@@ -83,7 +83,7 @@ def main():
                     print("Error: unknown command!")
 
         elif mode == "quit":
-            #controller.stop()
+            controller.stop()
             print("Exiting program...")
             raise SystemExit
 
