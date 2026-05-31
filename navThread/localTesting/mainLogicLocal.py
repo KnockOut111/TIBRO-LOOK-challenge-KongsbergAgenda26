@@ -9,7 +9,7 @@
 print("Starting mainLogic module...")
 
 #from forwardMotionDriver import forward_motion, backward_motion, stop_motion
-from navThread.localTesting.locomotionControllerLocal import LocomotionController, LocomotionModes
+from localTesting.locomotionControllerLocal import LocomotionController, LocomotionModes
 
 controller = LocomotionController()
 

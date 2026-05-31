@@ -1,4 +1,4 @@
-from navThread.localTesting.mainLogicLocal import main
+from localTesting.mainLogicLocal import main
 import time 
 
 def init_roverPi():

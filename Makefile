@@ -8,6 +8,11 @@ roverpi-build:
 	docker compose -f docker-compose.yml run --rm nav_thread 
 	docker compose -f docker-compose.yml logs -f
 
+rover-rebuild:
+	docker compose down
+	docker compose build --no-cache nav_thread
+	docker compose run --rm nav_thread
+
 # Rebuild the docker image for roverPi and run the container.
 roverpi-restart:
 	docker compose -f docker-compose.yml restart nav_thread
