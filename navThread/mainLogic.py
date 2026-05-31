@@ -101,6 +101,7 @@ class MainLogicNode(Node):
             self.get_logger().info("Resetting steering")
 
         elif command == "set_wheel_steering": 
+            se
 
         else:
             self.get_logger().warn(f"Unknown command: {command}")

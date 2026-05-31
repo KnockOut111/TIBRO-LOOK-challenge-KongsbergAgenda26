@@ -60,6 +60,9 @@ class LocomotionController(Node):
     def set_all_steering(self, angle):
         for servo in self.steering_servos:
             servo.angle = angle
+            
+    def set_wheel_steering(self, wheel_index, angle):
+        self.kit.servo[wheel_index].angle = angle
 
     def ackermann(self, steering_angle):
         self.get_logger().info(f"Ackermann steering: {steering_angle}")
