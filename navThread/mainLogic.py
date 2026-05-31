@@ -22,8 +22,8 @@ class MainLogicNode(Node):
         self.active = False
         self.locomotion_mode = LocomotionModes.ACKERMANN
 
-        self.create_subscription(String, "/rover/mode", self.mode_callback, 10)
-        self.create_subscription(String, "/rover/locomotion_mode", self.locomotion_callback, 10)
+        self.create_subscription(String, "/rover/mainMode", self.mode_callback, 10)
+        self.create_subscription(String, "/rover/locoMode", self.locomotion_callback, 10)
         self.create_subscription(String, "/rover/command", self.command_callback, 10)
 
         self.get_logger().info("main_logic node started")
