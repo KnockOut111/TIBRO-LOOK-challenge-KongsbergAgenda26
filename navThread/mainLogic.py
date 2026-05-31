@@ -1,4 +1,4 @@
-from locomotionController import LocomotionController, LocomotionModes
+from locomotionController import LocomotionController, LocomotionModes, SteeringServos
 from enum import Enum
 from rclpy.node import Node
 from std_msgs.msg import String
@@ -101,7 +101,7 @@ class MainLogicNode(Node):
             self.get_logger().info("Resetting steering")
 
         elif command == "set_wheel_steering": 
-            self.controller.set_wheel_steering(LocomotionController.FR, 90) 
+            self.controller.set_wheel_steering(SteeringServos.FR.value, 90) 
             self.get_logger().info("Setting front right wheel servo to 90 degrees")
 
         else:
