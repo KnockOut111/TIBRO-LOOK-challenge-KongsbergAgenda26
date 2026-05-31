@@ -63,8 +63,8 @@ class LocomotionController:
     FL, FR, CL, CR, RL, RR = range(6)
 
     def __init__(self):
-        super().__init__("locomotion_controller")
-
+        print("Starting local locomotion controller", flush=True)
+        
         self.kit = ServoKit(channels=16)
         self.drive_motors_left = [self.kit.continuous_servo[i] for i in range(3)]
         self.drive_motors_right = [self.kit.continuous_servo[i] for i in range(3, 6)]
