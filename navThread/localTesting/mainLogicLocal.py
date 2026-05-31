@@ -5,6 +5,7 @@
 # and will be responsible for sending commands to the motors based on the current mode and the desired movement.
 
 # Need to adapt to Ros2 yazzy and using nodes. 
+# Fix locomotion modes to work as it should, wheels are never set back to 90 degrees after turning, and point turn and crab steering are not implemented propperly.
 
 print("Starting mainLogic module...")
 

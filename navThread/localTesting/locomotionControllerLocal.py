@@ -65,6 +65,10 @@ class LocomotionController:
     def __init__(self):
         print("Starting local locomotion controller", flush=True)
 
+        max_steering_angle = 45
+        self.ackermann_r_min = abs(self.wheel_y) / math.tan(math.radians(max_steering_angle)) + self.wheel_x
+        self.ackermann_r_max = 250
+
         self.kit = ServoKit(channels=16)
         self.drive_motors_left = [self.kit.continuous_servo[i] for i in range(3)]
         self.drive_motors_right = [self.kit.continuous_servo[i] for i in range(3, 6)]
