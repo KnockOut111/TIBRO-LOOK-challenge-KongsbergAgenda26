@@ -2,17 +2,7 @@ from locomotionController import LocomotionController, LocomotionModes
 from enum import Enum
 from rclpy.node import Node
 from std_msgs.msg import String
-
 import rclpy
-import math
-
-controller = LocomotionController()
-
-
-class LocomotionModes(Enum):
-    ACKERMANN = 0
-    POINT_TURN = 1
-    CRABBING = 2
 
 #remember to implement functionality for the different logic steps (was commented out in local file.)
 # Need to adapt to Ros2 yazzy and using nodes. 
@@ -22,13 +12,15 @@ class LocomotionModes(Enum):
 class MainLogicNode(Node):
     def __init__(self):
         super().__init__("main_logic")
+        
+        self.controller = LocomotionController()
 
-        max_steering_angle = 45
-        self.ackermann_r_min = abs(self.wheel_y) / math.tan(math.radians(max_steering_angle)) + self.wheel_x
-        self.ackermann_r_max = 250
+        # max_steering_angle = 45
+        # self.ackermann_r_min = abs(self.wheel_y) / math.tan(math.radians(max_steering_angle)) + self.wheel_x
+        # self.ackermann_r_max = 250
 
         self.active = False
-        self.locomotion_mode = None
+        self.locomotion_mode = LocomotionModes.ACKERMANN
 
         self.create_subscription(String, "/rover/mode", self.mode_callback, 10)
         self.create_subscription(String, "/rover/locomotion_mode", self.locomotion_callback, 10)
@@ -72,6 +64,7 @@ class MainLogicNode(Node):
             self.get_logger().warn(f"Invalid locomotion mode: {locoMode}")
             return
 
+        self.controller.set_mode(self.locomotion_mode)
         self.get_logger().info(f"Locomotion mode set to {self.locomotion_mode.name}")
 
     def command_callback(self, msg):
@@ -83,19 +76,28 @@ class MainLogicNode(Node):
 
         # Implement missing command handling logic here, e.g.:
         if command == "forward":
+            self.controller.forward()
             self.get_logger().info("Moving forward")
 
         elif command == "backward":
+            self.controller.backward()
             self.get_logger().info("Moving backward")
 
         elif command == "stop":
+            self.controller.stop()
             self.get_logger().info("Stopping rover")
 
         elif command == "left_turn":
+            self.controller.set_all_steering(90 - 45)  # Example angle, adjust as needed
             self.get_logger().info("Turning left")
 
         elif command == "right_turn":
+            self.controller.set_all_steering(90 + 45)  # Example angle, adjust as needed
             self.get_logger().info("Turning right")
+
+        elif command == "reset_steering":
+            self.controller.set_all_steering(90)
+            self.get_logger().info("Resetting steering")
 
         else:
             self.get_logger().warn(f"Unknown command: {command}")
@@ -103,12 +105,14 @@ class MainLogicNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = MainLogicNode()
+
+    main_logic = MainLogicNode()
 
     try:
-        rclpy.spin(node)
+        rclpy.spin(main_logic)
     finally:
-        node.destroy_node()
+        main_logic.controller.stop()
+        main_logic.destroy_node()
         rclpy.shutdown()
 
 

@@ -1,5 +1,4 @@
 from enum import Enum
-import math
 
 import rclpy
 from rclpy.node import Node
@@ -13,8 +12,6 @@ class LocomotionModes(Enum):
 
 
 class LocomotionController(Node):
-    FL, FR, CL, CR, RL, RR = range(6)
-
     def __init__(self):
         super().__init__("locomotion_controller")
 
