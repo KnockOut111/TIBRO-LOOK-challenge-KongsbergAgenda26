@@ -38,7 +38,7 @@ class MainLogicNode(Node):
         elif mainMode == "quit":
             self.active = False
             self.get_logger().info("Rover stopped and program exiting... ")
-            rclpy.shutdown()
+            self.controller.shutdown_rover()
 
         else:
             self.get_logger().warn(f"Invalid mode: {mainMode}")
@@ -101,7 +101,8 @@ class MainLogicNode(Node):
             self.get_logger().info("Resetting steering")
 
         elif command == "set_wheel_steering": 
-            se
+            self.controller.set_wheel_steering(LocomotionController.FR, 90) 
+            self.get_logger().info("Setting front right wheel servo to 90 degrees")
 
         else:
             self.get_logger().warn(f"Unknown command: {command}")

@@ -10,6 +10,13 @@ class LocomotionModes(Enum):
     POINT_TURN = 1
     CRABBING = 2
 
+class SteeringServos(Enum):
+    FL = 6
+    FR = 9
+    CL = 7
+    CR = 10
+    RL = 8
+    RR = 11
 
 class LocomotionController(Node):
     def __init__(self):
@@ -60,7 +67,7 @@ class LocomotionController(Node):
     def set_all_steering(self, angle):
         for servo in self.steering_servos:
             servo.angle = angle
-            
+
     def set_wheel_steering(self, wheel_index, angle):
         self.kit.servo[wheel_index].angle = angle
 
@@ -77,6 +84,11 @@ class LocomotionController(Node):
     def crabbing(self, angle):
         self.get_logger().info(f"Crabbing angle: {angle}")
         self.set_all_steering(90 + angle)
+
+    def shutdown_rover(self):
+        self.controller.stop()
+        self.get_logger().info("Shutting down rover")
+        rclpy.shutdown()
 
 
 def main(args=None):
