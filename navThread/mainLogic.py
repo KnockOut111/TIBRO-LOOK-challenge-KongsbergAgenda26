@@ -70,6 +70,7 @@ class MainLogicNode(Node):
 
     def command_callback(self, msg):
         command = msg.data.strip().lower()
+        parts = command.split()
 
         if not self.active:
             self.get_logger().warn("Ignoring command because rover is not launched")
@@ -100,9 +101,13 @@ class MainLogicNode(Node):
             self.controller.set_all_steering(90)
             self.get_logger().info("Resetting steering")
 
-        elif command == "set_wheel_steering": 
-            self.controller.set_wheel_steering(SteeringServos.FR.value, 90) 
-            self.get_logger().info("Setting front right wheel servo to 90 degrees")
+        elif parts[0] == "set_wheel_steering":
+            wheel_name = parts[1].upper()
+            angle = int(parts[2])
+            wheel = SteeringServos[wheel_name]
+
+            self.controller.set_wheel_steering(wheel.value, angle)
+            self.get_logger().info(f"Set {wheel_name} steering to {angle} degrees")
 
         else:
             self.get_logger().warn(f"Unknown command: {command}")
