@@ -101,12 +101,32 @@ class MainLogicNode(Node):
             self.controller.set_all_steering(90)
             self.get_logger().info("Resetting steering")
 
-        elif parts[0] == "set_wheel_steering":
-            wheel_name = parts[1].upper()
-            angle = int(parts[2])
-            wheel = SteeringServos[wheel_name]
+        # elif parts[0] == "set_wheel_steering":
+        #     wheel_name = parts[1].upper()
+        #     angle = int(parts[2])
+        #     wheel = SteeringServos[wheel_name]
 
-            self.controller.set_wheel_steering(wheel.value, angle)
+        #     self.controller.set_wheel_steering(wheel.value, angle)
+        #     self.get_logger().info(f"Set {wheel_name} steering to {angle} degrees")
+
+        elif parts[0] == "set_wheel_steering":
+            if len(parts) != 3:
+                self.get_logger().warn("Input need to be on this: set_wheel_steering FR 90")
+                return
+
+            wheel_name = parts[1].upper()
+
+            try:
+                angle = int(parts[2])
+                wheel = SteeringServos[wheel_name]
+            except ValueError:
+                self.get_logger().warn(f"Invalid angle: {parts[2]}")
+                return
+            except KeyError:
+                self.get_logger().warn(f"Invalid wheel: {wheel_name}")
+                return
+
+            self.controller.set_wheel_steering(wheel, angle)
             self.get_logger().info(f"Set {wheel_name} steering to {angle} degrees")
 
         else:
