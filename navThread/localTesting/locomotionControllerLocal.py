@@ -64,7 +64,7 @@ class LocomotionController:
 
     def __init__(self):
         print("Starting local locomotion controller", flush=True)
-        
+
         self.kit = ServoKit(channels=16)
         self.drive_motors_left = [self.kit.continuous_servo[i] for i in range(3)]
         self.drive_motors_right = [self.kit.continuous_servo[i] for i in range(3, 6)]
@@ -72,7 +72,7 @@ class LocomotionController:
         # Example steering channels. Adjust to your real wiring.
         self.steering_servos = [self.kit.servo[i] for i in range(6, 12)]
 
-        self.mode = LocomotionModes.ACKERMANN
+        self.mode = None
 
         self.STOP = -1
         self.LEFT_FORWARD = 0
@@ -83,6 +83,9 @@ class LocomotionController:
     def set_mode(self, mode: LocomotionModes):
         self.mode = mode
         print(f"Set locomotion mode to: {mode.name}")
+
+    def get_mode(self):
+        return self.mode
 
     def set_drive(self, left_speed, right_speed):
         for motor in self.drive_motors_left:
