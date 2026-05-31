@@ -3,10 +3,10 @@ from enum import Enum
 from rclpy.node import Node
 from std_msgs.msg import String
 import rclpy
+import time
 
-#remember to implement functionality for the different logic steps (was commented out in local file.)
-# Need to adapt to Ros2 yazzy and using nodes. 
 # Fix locomotion modes to work as it should, wheels are never set back to 90 degrees after turning, and point turn and crab steering are not implemented propperly.
+# Front Right wheel is still not working as intended. Need to find solution.
 
 
 class MainLogicNode(Node):
@@ -101,14 +101,6 @@ class MainLogicNode(Node):
             self.controller.set_all_steering(90)
             self.get_logger().info("Resetting steering")
 
-        # elif parts[0] == "set_wheel_steering":
-        #     wheel_name = parts[1].upper()
-        #     angle = int(parts[2])
-        #     wheel = SteeringServos[wheel_name]
-
-        #     self.controller.set_wheel_steering(wheel.value, angle)
-        #     self.get_logger().info(f"Set {wheel_name} steering to {angle} degrees")
-
         elif parts[0] == "set_wheel_steering":
             if len(parts) != 3:
                 self.get_logger().warn("Input need to be on this: set_wheel_steering FR 90")
@@ -131,6 +123,28 @@ class MainLogicNode(Node):
 
         else:
             self.get_logger().warn(f"Unknown command: {command}")
+
+    def sensor_callback(self, msg):
+        sensorMsg = msg.data.strip().lower()
+        self.get_logger().info(f"Received sensor data: {sensorMsg}")
+        
+        # Implement sensor data handling logic here, e.g.: 
+        if sensorMsg == "obstacle_detected":
+            self.controller.stop()
+            self.get_logger().info("Obstacle detected! Stopping rover.")
+
+        elif sensorMsg == "clear_path":
+            self.controller.forward()
+            self.get_logger().info("Path is clear. Moving forward.")
+
+        elif sensorMsg == "metal_detected":
+            self.controller.stop()  
+            time.sleep(1)  # Pause briefly before moving backward
+            self.controller.backward()
+            time.sleep(2)  # Move backward for a short duration
+            #Run piCam AI image recognition for more detailed investigation of the metal object or similar, 
+            # and publish findings to a topic for further analysis.
+            self.get_logger().info("Metal detected! Stopping rover and moving backward for more detailed investigation.")
 
 
 def main(args=None):
