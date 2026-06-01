@@ -8,6 +8,40 @@ import time
 # Fix locomotion modes to work as it should, wheels are never set back to 90 degrees after turning, and point turn and crab steering are not implemented propperly.
 # Front Right wheel is still not working as intended. Need to find solution.
 
+#### Still having this errors that needs to be fixed: ####
+# Stopping rover
+# Traceback (most recent call last):
+#   File "/app/roverPi_init.py", line 15, in <module>
+#     main()
+#     ^^^^^^
+#   File "/app/mainLogic.py", line 142, in main
+#     elif sensorMsg == "metal_detected":
+#     ^^^^^^^^^^^^^^^^^^^^^^
+#   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/__init__.py", line 247, in spin
+#     executor.spin_once()
+#   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 926, in spin_once
+#     self._spin_once_impl(timeout_sec)
+#   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 918, in _spin_once_impl
+#     raise handler.exception()
+#   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/task.py", line 286, in _execute_coroutine_step
+#     result = coro.send(None)
+#              ^^^^^^^^^^^^^^^
+#   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 592, in handler
+#     await call_coroutine()
+#   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 480, in _execute
+#     await await_or_execute(sub.callback, *msg_tuple)
+#   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 115, in await_or_execute
+#     return callback(*args)
+#            ^^^^^^^^^^^^^^^
+#   File "/app/mainLogic.py", line 41, in mode_callback
+#     self.active = False
+#     ^^^^^^^^^^^^^^^^^^^^
+#   File "/app/locomotionController.py", line 87, in shutdown_rover
+#     self.controller.stop()
+#     ^^^^^^^^^^^^^^^
+# AttributeError: 'LocomotionController' object has no attribute 'controller'
+
+# make: *** [Makefile:10: roverpi-startsys] Error 1
 
 class MainLogicNode(Node):
     def __init__(self):
@@ -33,12 +67,13 @@ class MainLogicNode(Node):
     def mode_callback(self, msg):
         mainMode = msg.data.strip().lower()
 
-        if mainMode == "launch":
+        if mainMode == "arm":
             self.active = True
-            self.get_logger().info("Rover launched")
+            self.get_logger().info("Rover armed! ")
 
         elif mainMode == "quit":
             self.active = False
+            self.controller.stop()
             self.get_logger().info("Rover stopped and program exiting... ")
             self.controller.shutdown_rover()
 
@@ -75,7 +110,7 @@ class MainLogicNode(Node):
         parts = command.split()
 
         if not self.active:
-            self.get_logger().warn("Ignoring command because rover is not launched")
+            self.get_logger().warn("Ignoring command because rover is not armed. ")
             return
 
         # Implement missing command handling logic here, e.g.:
@@ -105,7 +140,7 @@ class MainLogicNode(Node):
 
         elif parts[0] == "set_wheel_steering":
             if len(parts) != 3:
-                self.get_logger().warn("Input need to be on this: set_wheel_steering FR 90")
+                self.get_logger().warn("Input need to be on this form: set_wheel_steering FR 90")
                 return
 
             wheel_name = parts[1].upper()
@@ -134,6 +169,11 @@ class MainLogicNode(Node):
         if sensorMsg == "obstacle_detected":
             self.controller.stop()
             self.get_logger().info("Obstacle detected! Stopping rover.")
+            time.sleep(3)  # Pause briefly before moving backward
+            self.controller.backward()
+            time.sleep(2)  # Move backward for a short duration
+            self.controller.stop()
+            self.get_logger().info("Moving backward and making a stop.")
 
         elif sensorMsg == "clear_path":
             self.controller.forward()
