@@ -38,7 +38,6 @@ class LocomotionController():
 
     def set_mode(self, mode: LocomotionModes):
         self.mode = mode
-        print(f"Set locomotion mode to: {mode.name}")
 
     def get_mode(self):
         return self.mode
@@ -51,15 +50,12 @@ class LocomotionController():
             motor.throttle = right_speed
 
     def stop(self):
-        print("Stopping rover")
         self.set_drive(self.STOP, self.STOP)
 
     def forward(self):
-        print("Moving forward")
         self.set_drive(self.LEFT_FORWARD, self.RIGHT_FORWARD)
 
     def backward(self):
-        print("Moving backward")
         self.set_drive(self.LEFT_BACKWARD, self.RIGHT_BACKWARD)
 
     def set_all_steering(self, angle):
@@ -70,21 +66,18 @@ class LocomotionController():
         self.kit.servo[wheel.value].angle = angle
 
     def ackermann(self, steering_angle):
-        print(f"Ackermann steering: {steering_angle}")
         self.set_all_steering(90 + steering_angle)
 
     def point_turn(self):
-        print("Point turn mode")
         angles = [45, 135, 90, 90, 135, 45]
         for servo, angle in zip(self.steering_servos, angles):
             servo.angle = angle
 
     def crabbing(self, angle):
-        print(f"Crabbing angle: {angle}")
         self.set_all_steering(90 + angle)
 
     def shutdown_rover(self):
-        self.stop
+        self.stop()
         print("Shutting down rover...")
 
 

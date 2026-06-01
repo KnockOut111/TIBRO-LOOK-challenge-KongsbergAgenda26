@@ -7,41 +7,7 @@ import time
 
 # Fix locomotion modes to work as it should, wheels are never set back to 90 degrees after turning, and point turn and crab steering are not implemented propperly.
 # Front Right wheel is still not working as intended. Need to find solution.
-
-#### Still having this errors that needs to be fixed: ####
-# Stopping rover
-# Traceback (most recent call last):
-#   File "/app/roverPi_init.py", line 15, in <module>
-#     main()
-#     ^^^^^^
-#   File "/app/mainLogic.py", line 142, in main
-#     elif sensorMsg == "metal_detected":
-#     ^^^^^^^^^^^^^^^^^^^^^^
-#   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/__init__.py", line 247, in spin
-#     executor.spin_once()
-#   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 926, in spin_once
-#     self._spin_once_impl(timeout_sec)
-#   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 918, in _spin_once_impl
-#     raise handler.exception()
-#   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/task.py", line 286, in _execute_coroutine_step
-#     result = coro.send(None)
-#              ^^^^^^^^^^^^^^^
-#   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 592, in handler
-#     await call_coroutine()
-#   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 480, in _execute
-#     await await_or_execute(sub.callback, *msg_tuple)
-#   File "/opt/ros/jazzy/lib/python3.12/site-packages/rclpy/executors.py", line 115, in await_or_execute
-#     return callback(*args)
-#            ^^^^^^^^^^^^^^^
-#   File "/app/mainLogic.py", line 41, in mode_callback
-#     self.active = False
-#     ^^^^^^^^^^^^^^^^^^^^
-#   File "/app/locomotionController.py", line 87, in shutdown_rover
-#     self.controller.stop()
-#     ^^^^^^^^^^^^^^^
-# AttributeError: 'LocomotionController' object has no attribute 'controller'
-
-# make: *** [Makefile:10: roverpi-startsys] Error 1
+# Need to make a function for calibrating the servos, maybe as an itialization step in the beginning of the program, to ensure that 90 degrees is actually straight for all wheels.
 
 class MainLogicNode(Node):
     def __init__(self):
@@ -82,28 +48,49 @@ class MainLogicNode(Node):
 
     def locomotion_callback(self, msg):
         locoMode = msg.data.strip().lower()
+        parts = locoMode.split()
 
-        if locoMode == "ackermann":
+        if parts[0] == "ackermann": # TEST!!!!
+            if len(parts) != 1:
+                self.get_logger().warn("Input type required: ackermann 30")
+                return
+
+            try:
+                steering_angle = int(parts[1])
+            except ValueError:
+                self.get_logger().warn(f"Invalid steering angle: {parts[1]}")
+                return
+
             self.locomotion_mode = LocomotionModes.ACKERMANN
-            self.get_logger().info("Ackermann mode activated.")
-            print("Ackermann mode activated.")
+            self.controller.ackermann(steering_angle)
+            self.get_logger().info(f"Ackermann activated at {steering_angle} degrees. ")
 
         elif locoMode == "point_turn":
             self.locomotion_mode = LocomotionModes.POINT_TURN
-            self.get_logger().info("Point turn mode activated.")
-            print("Point turn mode activated.")
+            self.controller.point_turn()
+            self.get_logger().info("Point turn activated. ")
 
-        elif locoMode == "crabbing":
+        elif parts[0] == "crabbing": # TEST!!!!
+            if len(parts) != 1:
+                self.get_logger().warn("Input type required: crabbing 90")
+                return
+
+            try:
+                angle = int(parts[1])
+            except ValueError:
+                self.get_logger().warn(f"Invalid angle: {parts[1]}")
+                return
+
             self.locomotion_mode = LocomotionModes.CRABBING
-            self.get_logger().info("Crabbing mode activated.")
-            print("Crabbing mode activated.")
+            self.controller.crabbing(angle)
+            self.get_logger().info(f"Crabbing activated at {angle} degrees")
 
         else:
             self.get_logger().warn(f"Invalid locomotion mode: {locoMode}")
             return
 
         self.controller.set_mode(self.locomotion_mode)
-        self.get_logger().info(f"Locomotion mode set to {self.locomotion_mode.name}")
+        self.get_logger().info(f"Locomotion set to: {self.locomotion_mode.name}") #Test that this one logs correct and not double
 
     def command_callback(self, msg):
         command = msg.data.strip().lower()
@@ -126,13 +113,33 @@ class MainLogicNode(Node):
             self.controller.stop()
             self.get_logger().info("Stopping rover")
 
-        elif command == "left_turn":
-            self.controller.set_all_steering(90 - 45)  # Example angle, adjust as needed
-            self.get_logger().info("Turning left")
+        elif parts[0] == "left_turn": # TEST!!!!
+            if len(parts) != 1:
+                self.get_logger().warn("Input type required: left_turn 45")
+                return
 
-        elif command == "right_turn":
-            self.controller.set_all_steering(90 + 45)  # Example angle, adjust as needed
-            self.get_logger().info("Turning right")
+            try:
+                turn_angle = int(parts[1])
+            except ValueError:
+                self.get_logger().warn(f"Invalid angle: {parts[1]}")
+                return
+            
+            self.controller.set_all_steering(90 - turn_angle)  # Example angle, adjust as needed
+            self.get_logger().info("Turning left " + str(turn_angle) + " degrees. ")
+
+        elif parts[0] == "right_turn":  # TEST!!!!
+            if len(parts) != 1:
+                self.get_logger().warn("Input type required: right_turn 45")
+                return
+
+            try:
+                turn_angle = int(parts[1])
+            except ValueError:
+                self.get_logger().warn(f"Invalid angle: {parts[1]}")
+                return
+
+            self.controller.set_all_steering(90 + turn_angle)  # Example angle, adjust as needed
+            self.get_logger().info("Turning right " + str(turn_angle) + " degrees. ")
 
         elif command == "reset_steering":
             self.controller.set_all_steering(90)
