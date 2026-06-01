@@ -51,7 +51,7 @@ class MainLogicNode(Node):
         parts = locoMode.split()
 
         if parts[0] == "ackermann": # TEST!!!!
-            if len(parts) != 1:
+            if len(parts) != 2:
                 self.get_logger().warn("Input type required: ackermann 30")
                 return
 
@@ -74,7 +74,7 @@ class MainLogicNode(Node):
             self.get_logger().info("Point turn activated. ")
 
         elif parts[0] == "crabbing": # TEST!!!!
-            if len(parts) != 1:
+            if len(parts) != 2:
                 self.get_logger().warn("Input type required: crabbing 90")
                 return
 
@@ -120,7 +120,7 @@ class MainLogicNode(Node):
             self.get_logger().info("Stopping rover")
 
         elif parts[0] == "left_turn": # TEST!!!!
-            if len(parts) != 1:
+            if len(parts) != 2:
                 self.get_logger().warn("Input type required: left_turn 45")
                 return
 
@@ -137,7 +137,7 @@ class MainLogicNode(Node):
             self.get_logger().info("Turning left " + str(turn_angle) + " degrees. ")
 
         elif parts[0] == "right_turn":  # TEST!!!!
-            if len(parts) != 1:
+            if len(parts) != 2:
                 self.get_logger().warn("Input type required: right_turn 45")
                 return
 
