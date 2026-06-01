@@ -73,9 +73,9 @@ class MainLogicNode(Node):
 
         elif mainMode == "quit":
             self.active = False
-            self.controller.stop()
             self.get_logger().info("Rover stopped and program exiting... ")
             self.controller.shutdown_rover()
+            rclpy.shutdown()
 
         else:
             self.get_logger().warn(f"Invalid mode: {mainMode}")
@@ -200,7 +200,8 @@ def main(args=None):
     finally:
         main_logic.controller.stop()
         main_logic.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":

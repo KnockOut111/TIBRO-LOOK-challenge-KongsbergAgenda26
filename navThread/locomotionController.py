@@ -84,8 +84,8 @@ class LocomotionController():
         self.set_all_steering(90 + angle)
 
     def shutdown_rover(self):
+        self.stop
         print("Shutting down rover...")
-        rclpy.shutdown()
 
 
 def main(args=None):
