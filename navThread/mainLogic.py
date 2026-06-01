@@ -60,10 +60,13 @@ class MainLogicNode(Node):
             except ValueError:
                 self.get_logger().warn(f"Invalid steering angle: {parts[1]}")
                 return
+            except IndexError:
+                self.get_logger().warn("Steering angle required for ackermann mode")
+                return
 
             self.locomotion_mode = LocomotionModes.ACKERMANN
             self.controller.ackermann(steering_angle)
-            self.get_logger().info(f"Ackermann activated at {steering_angle} degrees. ")
+            self.get_logger().info(f"Ackermann activated at {steering_angle} degrees")
 
         elif locoMode == "point_turn":
             self.locomotion_mode = LocomotionModes.POINT_TURN
@@ -79,6 +82,9 @@ class MainLogicNode(Node):
                 angle = int(parts[1])
             except ValueError:
                 self.get_logger().warn(f"Invalid angle: {parts[1]}")
+                return
+            except IndexError:
+                self.get_logger().warn("Steering angle required for crabbing mode")
                 return
 
             self.locomotion_mode = LocomotionModes.CRABBING
@@ -123,6 +129,9 @@ class MainLogicNode(Node):
             except ValueError:
                 self.get_logger().warn(f"Invalid angle: {parts[1]}")
                 return
+            except IndexError:
+                self.get_logger().warn("Turn angle required for left_turn")
+                return
             
             self.controller.set_all_steering(90 - turn_angle)  # Example angle, adjust as needed
             self.get_logger().info("Turning left " + str(turn_angle) + " degrees. ")
@@ -136,6 +145,9 @@ class MainLogicNode(Node):
                 turn_angle = int(parts[1])
             except ValueError:
                 self.get_logger().warn(f"Invalid angle: {parts[1]}")
+                return
+            except IndexError:
+                self.get_logger().warn("Turn angle required for right_turn")
                 return
 
             self.controller.set_all_steering(90 + turn_angle)  # Example angle, adjust as needed
