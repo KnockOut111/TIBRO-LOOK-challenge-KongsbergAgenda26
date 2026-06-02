@@ -71,7 +71,7 @@ class MainLogicNode(Node):
         elif locoMode == "point_turn":
             self.locomotion_mode = LocomotionModes.POINT_TURN
             self.controller.point_turn()
-            self.get_logger().info("Point turn activated. ")
+            self.get_logger().info("Point turn activated")
 
         elif parts[0] == "crabbing": # TEST!!!!
             if len(parts) != 2:
@@ -103,7 +103,7 @@ class MainLogicNode(Node):
         parts = command.split()
 
         if not self.active:
-            self.get_logger().warn("Ignoring command because rover is not armed. ")
+            self.get_logger().warn("Ignoring command because rover is not armed")
             return
 
         # Implement missing command handling logic here, e.g.:
@@ -133,7 +133,7 @@ class MainLogicNode(Node):
                 self.get_logger().warn("Turn angle required for left_turn")
                 return
             
-            self.controller.set_all_steering(90 - turn_angle)  # Example angle, adjust as needed
+            self.controller.set_all_steering(90 - turn_angle)  # Need to fix stearing for different modes.
             self.get_logger().info("Turning left " + str(turn_angle) + " degrees. ")
 
         elif parts[0] == "right_turn":  # TEST!!!!

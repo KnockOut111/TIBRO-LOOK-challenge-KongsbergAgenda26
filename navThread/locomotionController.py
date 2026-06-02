@@ -66,15 +66,19 @@ class LocomotionController():
         self.kit.servo[wheel.value].angle = angle
 
     def ackermann(self, steering_angle):
-        self.set_all_steering(90 + steering_angle)
+        self.set_wheel_steering(SteeringServos.FR, 90 - steering_angle) #Need checking of angles.
+        self.set_wheel_steering(SteeringServos.FL, 90 + steering_angle)
 
     def point_turn(self):
-        angles = [45, 135, 90, 90, 135, 45]
+        angles = [45, 135, 90, 90, 135, 45] #Check if angles is on right servo pos
         for servo, angle in zip(self.steering_servos, angles):
             servo.angle = angle
+        
+        #Fix so that only rear and front wheels turn in opposite direction, the middle ones must be still.
 
     def crabbing(self, angle):
         self.set_all_steering(90 + angle)
+        # This should work, but maybe add a limit so that only 0 (straight) or 90 (sideways) is allowed.
 
     def shutdown_rover(self):
         self.stop()
