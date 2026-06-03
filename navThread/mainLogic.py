@@ -157,7 +157,7 @@ class MainLogicNode(Node):
             self.controller.set_all_steering(90)
             self.get_logger().info("Resetting steering")
 
-        elif parts[0] == "set_wheel_steering":
+        elif parts[0] == "set_wheel_steering": # TEST
             if len(parts) != 3:
                 self.get_logger().warn("Input need to be on this form: set_wheel_steering FR 90")
                 return

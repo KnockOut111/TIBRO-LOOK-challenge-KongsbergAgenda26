@@ -2,10 +2,11 @@
 # This file creates a more user-friendly way to run the system.
 # It also makes it easier to run the system on different machines without having to remember all the different commands.
 
+#### Remember to make a command here with out downloading stuff if only local is an option ####
+
 # Build the docker image for roverPi and run the container. Also shows the logs of the container.
 #Currently only for the navThread
 roverpi-startsys:
-	cd /home/tibro/TIBRO-LOOK-challenge-KongsbergAgenda26
 	docker compose -f docker-compose.yml build
 	docker compose -f docker-compose.yml run --rm nav_thread 
 	docker compose -f docker-compose.yml logs -f
