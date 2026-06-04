@@ -40,10 +40,9 @@ class MainLogicNode(Node):
         def wheel_calibration(self):
             self.get_logger().info("Initializing the steering servos... ")
 
-            for steeringPos in SteeringServos:
-                self.LocomotionController.set_wheel_steering(steeringPos, 90) # Set all wheels to 90 degrees for straight forward motion. Adjust if needed.
+            self.controller.initialize_steering_servos()
             
-            self.get_logger().info("Finished calibrating the servos for straight forward motion. ")
+            self.get_logger().info("Finished calibrating the steering servos for straight forward motion. ")
             return
 
         def camera1_calibration(self):

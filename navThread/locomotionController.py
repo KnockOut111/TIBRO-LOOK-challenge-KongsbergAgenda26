@@ -31,6 +31,17 @@ class LocomotionController():
         self.RIGHT_FORWARD = 1
         self.RIGHT_BACKWARD = 0
 
+        self.steering_neutral = {
+            SteeringServos.FL: 90,
+            SteeringServos.FR: 90,
+            SteeringServos.CL: 90,
+            SteeringServos.CR: 90,
+            SteeringServos.RL: 90,
+            SteeringServos.RR: 90,
+        }
+
+        self.current_steering_angles = {}
+
     def set_mode(self, mode: LocomotionModes):
         self.mode = mode
 
@@ -51,9 +62,9 @@ class LocomotionController():
     def set_wheel_steering(self, wheel: SteeringServos, angle):
         self.kit.servo[wheel.value].angle = angle
 
-    # def initialize_steering_servos(self):
-    #     for steeringPos in SteeringServos:
-    #         set current degree to default straight forward position, e.g. 90 degrees.
+    def initialize_steering_servos(self):
+        for steeringPos in SteeringServos:
+            self.set_wheel_steering(steeringPos, 90) #set current degree to default straight forward position, e.g. 90 degrees.
 
 
     def stop(self):
