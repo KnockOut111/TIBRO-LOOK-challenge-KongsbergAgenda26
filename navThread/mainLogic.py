@@ -46,12 +46,13 @@ class MainLogicNode(Node):
         self.get_logger().info("Initializing of tibro-roverPi is completed. ")
 
     def wheel_calibration(self):
-            self.get_logger().info("Initializing the steering servos... ")
+        self.get_logger().info("Initializing the steering servos... ")
 
-            self.controller.initialize_steering_servos()
-            
-            self.get_logger().info("Finished calibrating the steering servos for straight forward motion. ")
-            return
+        self.controller.load_neutral_positions()
+        self.controller.initialize_steering_state()
+
+        self.get_logger().info("Finished calibrating the steering servos for straight forward motion. ")
+        return
 
     def camera1_calibration(self):
         self.get_logger().info("Starting stereo camera calibraiton sequence. ")
@@ -91,7 +92,6 @@ class MainLogicNode(Node):
 
             #self.controller.shutdown_rover()
             rclpy.shutdown()
-
 
         else:
             self.get_logger().warn(f"Invalid mode: {mainMode}")
@@ -154,7 +154,7 @@ class MainLogicNode(Node):
 
     def command_callback(self, msg):
         if not self.is_armed():
-            self.get_logger().warn("Ignoring command! ")
+            self.get_logger().warn("Ignoring command! The rover is not armed.")
             return
         
         command = msg.data.strip().lower()
@@ -207,7 +207,7 @@ class MainLogicNode(Node):
             self.controller.set_all_steering(90 + turn_angle)  # Example angle, adjust as needed
             self.get_logger().info("Turning right " + str(turn_angle) + " degrees. ")
 
-        elif command == "reset_steering":
+        elif command == "reset_steering": # Out of date!
             self.controller.set_all_steering(90)
             self.get_logger().info("Resetting steering")
 
@@ -231,12 +231,17 @@ class MainLogicNode(Node):
             self.controller.set_wheel_steering(wheel, angle)
             self.get_logger().info(f"Set {wheel_name} steering to {angle} degrees")
 
+        elif command == "update_steering": # TEST
+            self.controller.update_steering_neutral_positions()
+            self.controller.save_neutral_positions()
+            self.get_logger().info("Updated steering neutral positions to current angles and saved to file ")
+
         else:
             self.get_logger().warn(f"Unknown command: {command}")
 
     def sensor_callback(self, msg):
         if not self.is_armed():
-            self.get_logger().warn("Ignoring command! ")
+            self.get_logger().warn("Ignoring command! The rover is not armed.")
             return
         
         sensorMsg = msg.data.strip().lower()
@@ -266,7 +271,7 @@ class MainLogicNode(Node):
             self.controller.stop()  
             self.get_logger().info("Metal detected! Stopping rover and moving backward for more detailed investigation.")
 
-    def starting_autonomous_mode(self):
+    def autonomous_mode(self):
         if not self.is_armed():
             self.get_logger().warn("Autonomous mode did not start. The rover needs to be armed!")
             return

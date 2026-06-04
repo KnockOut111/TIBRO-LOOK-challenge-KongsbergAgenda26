@@ -1,5 +1,6 @@
 from enum import Enum
 from adafruit_servokit import ServoKit
+import json
 
 
 class LocomotionModes(Enum):
@@ -41,7 +42,52 @@ class LocomotionController():
         }
 
         self.current_steering_angles = {}
+        
 
+### Steering servo initialization, calibration, storage and loading ###
+    def initialize_steering_state(self):
+        print("Initializing steering servo state...")
+
+        for wheel, neutral_angle in self.steering_neutral.items():
+            self.set_wheel_steering(wheel, neutral_angle)
+            self.current_steering_angles[wheel] = neutral_angle
+        
+        print("Steering servos initialized to neutral positions")
+
+    def update_steering_neutral_positions(self, wheel: SteeringServos, angle):
+        for wheel, neutral_angle in self.steering_neutral.items():
+            angle = max(0, min(180, angle))  # Ensure angle is within valid range
+            self.update_neutral_position(wheel, neutral_angle)
+
+    def update_neutral_position(self, wheel: SteeringServos, angle):
+        self.steering_neutral[wheel] = angle
+        print(f"Updated neutral position for {wheel.name} to {angle} degrees")
+    
+    def save_neutral_positions(self):
+        data = {
+            wheel.name: angle
+            for wheel, angle in self.steering_neutral.items()
+        }
+
+        with open("steering_calibration.json", "w") as f:
+            json.dump(data, f, indent=4)
+
+    def load_neutral_positions(self):
+        try:
+            with open("steering_calibration.json", "r") as f:
+                data = json.load(f)
+
+            self.steering_neutral = {
+                SteeringServos[name]: angle
+                for name, angle in data.items()
+            }
+
+            print("Loaded steering calibration")
+
+        except FileNotFoundError:
+            print("No steering calibration found, using defaults")
+
+### Different set fuctions for different modes, e.g. set_mode, set_drive, set_steering, etc. ###
     def set_mode(self, mode: LocomotionModes):
         self.mode = mode
 
@@ -60,13 +106,18 @@ class LocomotionController():
             servo.angle = angle
 
     def set_wheel_steering(self, wheel: SteeringServos, angle):
+        angle = max(0, min(180, angle))  # Ensure angle is within valid range
         self.kit.servo[wheel.value].angle = angle
-
-    def initialize_steering_servos(self):
-        for steeringPos in SteeringServos:
-            self.set_wheel_steering(steeringPos, 90) #set current degree to default straight forward position, e.g. 90 degrees.
+        self.current_steering_angles[wheel] = angle
 
 
+    def initialize_steering_servos(self, wheel: SteeringServos, angle):
+        angle = max(0, min(180, angle))  # Ensure angle is within valid range
+
+        self.kit.servo[wheel.value].angle = angle
+        self.current_steering_angles[wheel] = angle
+
+### Main drive functions ###
     def stop(self):
         self.set_drive(self.STOP, self.STOP)
 
@@ -76,7 +127,7 @@ class LocomotionController():
     def backward(self):
         self.set_drive(self.LEFT_BACKWARD, self.RIGHT_BACKWARD)
 
-
+### Different locomotion modes ###
     def ackermann(self, steering_angle):
         self.set_wheel_steering(SteeringServos.FR, 90 - steering_angle) #Need checking of angles.
         self.set_wheel_steering(SteeringServos.FL, 90 + steering_angle)
