@@ -4,9 +4,9 @@
 
 
 roverpi-startsys:
-	roverpi-build
-	roverpi-start
-	roverpi-logs
+	docker compose -f docker-compose.yml build
+	docker compose -f docker-compose.yml up -d
+	docker compose -f docker-compose.yml logs -f
 
 roverpi-build:
 	docker compose -f docker-compose.yml build
@@ -45,7 +45,7 @@ roverpi-localstop:
 
 
 # Build the docker image. Also shows the logs of the container.
-roverpi-build:
+roverpi-buildandlog:
 	docker compose -f docker-compose.yml build
 	docker compose -f docker-compose.yml logs -f
 
