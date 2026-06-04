@@ -74,9 +74,6 @@ class MainLogicNode(Node):
 
 
     def mode_callback(self, msg):
-        if not self.is_armed():
-            return
-        
         mainMode = msg.data.strip().lower()
 
         if mainMode == "arm":
