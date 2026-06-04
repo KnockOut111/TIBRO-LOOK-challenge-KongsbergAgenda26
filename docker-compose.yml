@@ -37,6 +37,30 @@ services:
       - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
     command: python3 -u metalSensorLogic.py
 
+# IMU Possibly also wheel odometry data, but currently not implemented. Missing encoders for this to work?
+  # imu_sensor_thread:
+  #   build: .
+  #   container_name: roverpi-imu_sensor_thread
+  #   privileged: true
+  #   devices:
+  #     - /dev/i2c-1:/dev/i2c-1
+  #   volumes:
+  #     - .:/app
+  #   working_dir: /app
+  #   command: python imuSensorThread.py  # Needs to set what is to run when the container starts, otherwise it will just run the default command which is to start a bash terminal
+
+# Stereo Camera thread for obstacle detection and avoidance. 
+  # stereo_camera_thread:
+  #   build: .
+  #   container_name: roverpi-stereo_camera_thread
+  #   privileged: true
+  #   devices:
+  #     - /dev/i2c-1:/dev/i2c-1
+  #   volumes:
+  #     - .:/app
+  #   working_dir: /app
+  #   command: python stereoCameraThread.py  # Needs to set what is to run when the container starts, otherwise it will just run the default command which is to start a bash terminal
+
 # Running Visual SLAM, estimating the position (pose) of the rover and building a map of the environment. 
   # mapping_thread:
   #   build: .
@@ -49,20 +73,7 @@ services:
   #   working_dir: /app
   #   command: python mappingThread.py  # Needs to set what is to run when the container starts, otherwise it will just run the default command which is to start a bash terminal
 
-## Given code (b):
-# IMU and magnetic detection data. Possibly also wheel odometry data, but currently not implemented. Missing encoders for this to work?
-  # sensor_thread:
-  #   build: .
-  #   container_name: roverpi-sensor_thread
-  #   privileged: true
-  #   devices:
-  #     - /dev/i2c-1:/dev/i2c-1
-  #   volumes:
-  #     - .:/app
-  #   working_dir: /app
-  #   command: python sensorThread.py  # Needs to set what is to run when the container starts, otherwise it will just run the default command which is to start a bash terminal
-
-#
+# Mainly handles sending of data to and from the remote server or computer
   # server_thread:
   #   build: .
   #   container_name: roverpi-server_thread

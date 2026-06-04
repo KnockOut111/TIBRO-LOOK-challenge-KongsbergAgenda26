@@ -1,9 +1,10 @@
-from locomotionController import LocomotionController, LocomotionModes, SteeringServos
-from enum import Enum
-from rclpy.node import Node
-from std_msgs.msg import String
 import rclpy
 import time
+
+from locomotionController import LocomotionController, LocomotionModes, SteeringServos
+from rclpy.node import Node
+from std_msgs.msg import String
+from rclpy.executors import ExternalShutdownException
 
 # Fix locomotion modes to work as it should, wheels are never set back to 90 degrees after turning, and point turn and crab steering are not implemented propperly.
 # Front Right wheel is still not working as intended. Need to find solution.
@@ -220,13 +221,18 @@ class MainLogicNode(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    main_logic = MainLogicNode()
-
+    mainLogic_node = MainLogicNode()
+    
     try:
-        rclpy.spin(main_logic)
+        rclpy.spin(mainLogic_node)
+    
+    except ExternalShutdownException:
+        pass
+
     finally:
-        main_logic.controller.stop()
-        main_logic.destroy_node()
+        mainLogic_node.controller.stop()
+        mainLogic_node.destroy_node()
+
         if rclpy.ok():
             rclpy.shutdown()
 

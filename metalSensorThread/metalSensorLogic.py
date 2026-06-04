@@ -82,16 +82,18 @@ class MetalSensorNode(Node):
 			rclpy.shutdown()
 
 
-def main():
-	rclpy.init()
+def main(args=None):
+	rclpy.init(args=args)
 	node = MetalSensorNode()
 
 	try:
 		rclpy.spin(node)
+
 	except ExternalShutdownException:
 		pass
 	except KeyboardInterrupt:
 		pass
+
 	finally:
 		node.destroy_node()
 		
