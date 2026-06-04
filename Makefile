@@ -4,8 +4,15 @@
 
 #### Remember to make a command here with out downloading stuff if only local is an option ####
 
+roverpi-localStart:
+	docker compose up
+	docker compose -f docker-compose.yml logs -f
+
+roverpi-localStop:
+	docker compose down
+
 # Build the docker image for roverPi and run the container. Also shows the logs of the container.
-#Currently only for the navThread
+#Currently only for the navThread?
 roverpi-startsys:
 	docker compose -f docker-compose.yml build
 	docker compose -f docker-compose.yml run --rm nav_thread 
@@ -17,7 +24,7 @@ roverpi-rebuild:
 	docker compose build --no-cache nav_thread
 	docker compose run --rm nav_thread
 
-# Rebuild the docker image for roverPi and run the container.
+# Rebuild the docker image navThread for roverPi and run the container.
 roverpi-restart:
 	docker compose -f docker-compose.yml restart nav_thread
 

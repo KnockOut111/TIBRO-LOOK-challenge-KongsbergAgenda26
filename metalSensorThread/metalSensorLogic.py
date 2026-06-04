@@ -11,6 +11,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.executors import ExternalShutdownException
 
+from std_msgs.msg import String
 from std_msgs.msg import Bool
 
 try:
@@ -25,6 +26,16 @@ else:
 class MetalSensorNode(Node):
 	def __init__(self):
 		super().__init__("metal_sensor_node")
+
+		#Defining a callback for the shutdown topic 
+		self.create_subscribtion( 
+			String,
+            "/rover/system_shutdown",
+            self.shutdown_callback,
+            10
+        )
+
+		self.get_logger().info("Metal sensor node started")
 
 		self.declare_parameter("pins", [17, 22, 27])
 		self.declare_parameter("publish_rate_hz", 10.0)
@@ -65,9 +76,14 @@ class MetalSensorNode(Node):
 			device.close()
 		super().destroy_node()
 
+	def shutdown_callback(self, msg):
+		if msg.data.strip().lower() == "shutdown":
+			self.get_logger().info("Shutdown signal received. Shutting down metal sensor node...")
+			rclpy.shutdown()
+
 
 def main():
-	rclpy.init()
+	rclpy.init(args=args)
 	node = MetalSensorNode()
 
 	try:
@@ -78,6 +94,7 @@ def main():
 		pass
 	finally:
 		node.destroy_node()
+		
 		if rclpy.ok():
 			rclpy.shutdown()
 

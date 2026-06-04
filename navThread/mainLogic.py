@@ -26,6 +26,7 @@ class MainLogicNode(Node):
         self.create_subscription(String, "/rover/locoMode", self.locomotion_callback, 10)
         self.create_subscription(String, "/rover/command", self.command_callback, 10)
         self.create_subscription(String, "/rover/sensorMsg", self.sensor_callback, 10)
+        self.shutdown_pub = self.create_publisher(String, "/rover/system_shutdown",10)
 
 
         self.get_logger().info("main_logic node started")
@@ -39,9 +40,16 @@ class MainLogicNode(Node):
 
         elif mainMode == "quit":
             self.active = False
+            self.controller.stop()
             self.get_logger().info("Rover stopped and program exiting... ")
-            self.controller.shutdown_rover()
+
+            shutdown_msg = String()
+            shutdown_msg.data = "shutdown"
+            self.shutdown_pub.publish(shutdown_msg)
+
+            #self.controller.shutdown_rover()
             rclpy.shutdown()
+
 
         else:
             self.get_logger().warn(f"Invalid mode: {mainMode}")

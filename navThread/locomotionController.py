@@ -1,7 +1,4 @@
 from enum import Enum
-
-import rclpy
-from rclpy.node import Node
 from adafruit_servokit import ServoKit
 
 
@@ -82,12 +79,12 @@ class LocomotionController():
         # This should work if wheels are calibrated at start, but maybe add a limit so that only 0 (straight) or 90 (sideways) is allowed.
 
 
-    def shutdown_rover(self):
-        self.stop()
-        print("Shutting down rover...")
+    # def shutdown_rover(self):
+    #     self.stop()
+    #     print("Shutting down rover...")
 
 
-class autonomousController():
+class AutonomousController():
     def starting_procedure():
         print("Starting up rover and driving off ramp...")
 
@@ -95,12 +92,12 @@ class autonomousController():
         # then tilt some degrees (going off ramp), 0 agan when off ramp + some deviation in level hight.
         # As the ramp is higher up than the main area of traversal. 
 
-    def scanning_mode():
+    def scanning_mode(self):
         print("Starting scanning the area by turning 360 degrees. ")
         # Scan the area by turning 360 degrees in point_turn mode, as long as no obsticles are detected. 
         # Simultaneously as stereo camera is taking in the suroundings. 
 
-    def main_loop():
+    def main_loop(self):
         print("Entering the main logic of the rover driving. ")
         # Drive forward, untill object detected inside a given distance.
         # Then stop, move backwards for 2s? then move random? left or right.
@@ -108,24 +105,8 @@ class autonomousController():
         # innside the given limit of radius to possible obstacle.
         
 
-class metelDetectionController():
+class MetelDetectionController():
     def metal_detected(bool):
         metalDetected = bool
         print("Metal detected! ")
-
-
-def main(args=None):
-    rclpy.init(args=args)
-
-    node = LocomotionController()
-
-    try:
-        rclpy.spin(node)
-    finally:
-        node.stop()
-        node.destroy_node()
-        rclpy.shutdown()
-
-
-if __name__ == "__main__":
-    main()
+        
