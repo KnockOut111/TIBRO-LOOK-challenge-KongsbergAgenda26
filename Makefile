@@ -2,6 +2,38 @@
 # This file creates a more user-friendly way to run the system.
 # It also makes it easier to run the system on different machines without having to remember all the different commands.
 
+
+roverpi-startsys:
+	roverpi-build
+	roverpi-start
+	roverpi-logs
+
+roverpi-build:
+	docker compose -f docker-compose.yml build
+
+roverpi-start:
+	docker compose -f docker-compose.yml up -d
+
+roverpi-logs:
+	docker compose -f docker-compose.yml logs -f
+
+roverpi-stopsys:
+	docker compose -f docker-compose.yml down
+
+# Rebuild the docker image for roverPi and run the container.
+roverpi-restart:
+	docker compose -f docker-compose.yml restart 
+
+# Stops and removes conainers + orphans.
+roverpi-stopclean: 
+	docker compose -f docker-compose.yml down --remove-orphans
+
+# Stops and removes conainers, volumes and orphans.
+roverpi-clean:
+	docker compose -f docker-compose.yml down -v --remove-orphans
+
+	
+
 # More clean and easy way to run the system locally, without downloading new content/updates.
 roverpi-localstart:
 	docker compose up
@@ -10,30 +42,18 @@ roverpi-localstart:
 roverpi-localstop:
 	docker compose down
 
-# Build the docker image for roverPi and run the container. Also shows the logs of the container.
-#Currently only for the navThread?
-roverpi-startsys:
+
+
+# Build the docker image. Also shows the logs of the container.
+roverpi-build:
 	docker compose -f docker-compose.yml build
-	docker compose -f docker-compose.yml run --rm nav_thread 
 	docker compose -f docker-compose.yml logs -f
 
-#Restarting the navThread
+#Restarting the system
 roverpi-rebuild:
 	docker compose down
-	docker compose build --no-cache nav_thread
-	docker compose run --rm nav_thread
-
-# Rebuild the docker image navThread for roverPi and run the container.
-roverpi-restart:
-	docker compose -f docker-compose.yml restart nav_thread
-
-# Stops and removes conainers + orphans.
-roverpi-stop: 
-	docker compose -f docker-compose.yml down --remove-orphans
-
-# Stops and removes conainers, volumes and orphans.
-roverpi-clean:
-	docker compose -f docker-compose.yml down -v --remove-orphans
+	docker compose build --no-cache 
+	docker compose run --rm 
 
 
 
@@ -46,6 +66,7 @@ build-from-scratch:
 	docker compose -f docker-compose.yml build --no-cache
 	docker compose -f docker-compose.yml up -d
 	docker compose -f docker-compose.yml logs -f
+
 
 
 # Metal sensor docker targets
