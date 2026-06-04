@@ -36,8 +36,18 @@ class MainLogicNode(Node):
 
     def init_roverPi(self):
         self.get_logger().info("Initializing roverPi system... ")
-        
-        def wheel_calibration(self):
+
+        #time.sleep(1) #Simulating inittialization steps
+    
+        #Need to implement initialization logic here ....
+        self.wheel_calibration()
+        self.camera1_calibration()
+        self.camera2_calibration()
+        self.imu_calibration()
+
+        self.get_logger().info("Initializing of tibro-roverPi is completed. ")
+
+    def wheel_calibration(self):
             self.get_logger().info("Initializing the steering servos... ")
 
             self.controller.initialize_steering_servos()
@@ -45,26 +55,17 @@ class MainLogicNode(Node):
             self.get_logger().info("Finished calibrating the steering servos for straight forward motion. ")
             return
 
-        def camera1_calibration(self):
-            self.get_logger().info("Starting stereo camera calibraiton sequence. ")
-            return
+    def camera1_calibration(self):
+        self.get_logger().info("Starting stereo camera calibraiton sequence. ")
+        return
 
-        def camera2_calibration(self):
-            self.get_logger().info("Starting rasPi cam module2 calibraiton sequence. ")
-            return
+    def camera2_calibration(self):
+        self.get_logger().info("Starting rasPi cam module2 calibraiton sequence. ")
+        return
 
-        def imu_calibration(self):
-            self.get_logger().info("Starting IMU calibraiton sequence. ")
-            return
-        #time.sleep(1) #Simulating inittialization steps
-    
-        #Need to implement initialization logic here ....
-        wheel_calibration()
-        camera1_calibration()
-        camera2_calibration()
-        imu_calibration()
-
-        self.get_logger().info("Initializing of tibro-roverPi is completed. ")
+    def imu_calibration(self):
+        self.get_logger().info("Starting IMU calibraiton sequence. ")
+        return
 
 
     def mode_callback(self, msg):
