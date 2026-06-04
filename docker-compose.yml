@@ -18,7 +18,7 @@ services:
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/app
       - BLINKA_FORCECHIP=BCM2XXX    
-    command: python3 -u roverPi_init.py  # Decides what is to run on startup, otherwise it will just run the default command which is to start a bash terminal
+    command: python3 -u mainLogic.py  # Decides what is to run on startup, otherwise it will just run the default command which is to start a bash terminal
 
   metal_sensor_thread:
     build:

@@ -9,10 +9,12 @@ from rclpy.executors import ExternalShutdownException
 # Fix locomotion modes to work as it should, wheels are never set back to 90 degrees after turning, and point turn and crab steering are not implemented propperly.
 # Front Right wheel is still not working as intended. Need to find solution.
 # Need to make a function for calibrating the servos, maybe as an itialization step in the beginning of the program, to ensure that 90 degrees is actually straight for all wheels.
+    ## Fix init servos steering func in locomotion controller and call it in the init of the main logic node.
+    ## Test and start implementing init for cameras and IMU as well
 
 class MainLogicNode(Node):
     def __init__(self):
-        super().__init__("main_logic")
+        super().__init__("mainLogic_node")
         
         self.controller = LocomotionController()
 
@@ -21,7 +23,7 @@ class MainLogicNode(Node):
         # self.ackermann_r_max = 250
 
         self.active = False
-        self.locomotion_mode = LocomotionModes.ACKERMANN
+        self.locomotion_mode = LocomotionModes.CRABBING
 
         self.create_subscription(String, "/rover/mainMode", self.mode_callback, 10)
         self.create_subscription(String, "/rover/locoMode", self.locomotion_callback, 10)
@@ -29,8 +31,42 @@ class MainLogicNode(Node):
         self.create_subscription(String, "/rover/sensorMsg", self.sensor_callback, 10)
         self.shutdown_pub = self.create_publisher(String, "/rover/system_shutdown",10)
 
-
+        self.init_roverPi()
         self.get_logger().info("MainLogicNode is running...")
+
+    def init_roverPi(self):
+        self.get_logger().info("Initializing roverPi system... ")
+        
+        def wheel_calibration(self):
+            self.get_logger().info("Initializing the steering servos... ")
+
+            for steeringPos in SteeringServos:
+                self.LocomotionController.set_wheel_steering(steeringPos, 90) # Set all wheels to 90 degrees for straight forward motion. Adjust if needed.
+            
+            self.get_logger().info("Finished calibrating the servos for straight forward motion. ")
+            return
+
+        def camera1_calibration(self):
+            self.get_logger().info("Starting stereo camera calibraiton sequence. ")
+            return
+
+        def camera2_calibration(self):
+            self.get_logger().info("Starting rasPi cam module2 calibraiton sequence. ")
+            return
+
+        def imu_calibration(self):
+            self.get_logger().info("Starting IMU calibraiton sequence. ")
+            return
+        #time.sleep(1) #Simulating inittialization steps
+    
+        #Need to implement initialization logic here ....
+        wheel_calibration()
+        camera1_calibration()
+        camera2_calibration()
+        imu_calibration()
+
+        self.get_logger().info("Initializing of tibro-roverPi is completed. ")
+
 
     def mode_callback(self, msg):
         mainMode = msg.data.strip().lower()

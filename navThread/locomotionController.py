@@ -51,6 +51,10 @@ class LocomotionController():
     def set_wheel_steering(self, wheel: SteeringServos, angle):
         self.kit.servo[wheel.value].angle = angle
 
+    # def initialize_steering_servos(self):
+    #     for steeringPos in SteeringServos:
+    #         set current degree to default straight forward position, e.g. 90 degrees.
+
 
     def stop(self):
         self.set_drive(self.STOP, self.STOP)
