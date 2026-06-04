@@ -29,7 +29,7 @@ class MainLogicNode(Node):
         self.shutdown_pub = self.create_publisher(String, "/rover/system_shutdown",10)
 
 
-        self.get_logger().info("main_logic node started")
+        self.get_logger().info("MainLogicNode is running...")
 
     def mode_callback(self, msg):
         mainMode = msg.data.strip().lower()

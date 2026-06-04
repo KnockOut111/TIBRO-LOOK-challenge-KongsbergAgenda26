@@ -31,8 +31,6 @@ class LocomotionController():
         self.RIGHT_FORWARD = 1
         self.RIGHT_BACKWARD = 0
 
-        print("Locomotion controller started")
-
     def set_mode(self, mode: LocomotionModes):
         self.mode = mode
 
