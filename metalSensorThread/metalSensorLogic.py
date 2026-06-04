@@ -83,7 +83,7 @@ class MetalSensorNode(Node):
 
 
 def main():
-	rclpy.init(args=args)
+	rclpy.init()
 	node = MetalSensorNode()
 
 	try:

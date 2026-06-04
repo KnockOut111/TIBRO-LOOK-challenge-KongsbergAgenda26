@@ -2,13 +2,12 @@
 # This file creates a more user-friendly way to run the system.
 # It also makes it easier to run the system on different machines without having to remember all the different commands.
 
-#### Remember to make a command here with out downloading stuff if only local is an option ####
-
-roverpi-localStart:
+# More clean and easy way to run the system locally, without downloading new content/updates.
+roverpi-localstart:
 	docker compose up
 	docker compose -f docker-compose.yml logs -f
 
-roverpi-localStop:
+roverpi-localstop:
 	docker compose down
 
 # Build the docker image for roverPi and run the container. Also shows the logs of the container.
