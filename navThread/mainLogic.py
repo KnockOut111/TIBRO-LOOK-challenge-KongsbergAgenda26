@@ -32,10 +32,10 @@ class MainLogicNode(Node):
         self.shutdown_pub = self.create_publisher(String, "/rover/system_shutdown",10)
 
         self.init_roverPi()
-        self.get_logger().info("MainLogicNode is running...")
+        self.get_logger().info("MainLogicNode is now running...")
 
     def init_roverPi(self):
-        self.get_logger().info("Initializing roverPi system... ")
+        self.get_logger().info("Initializing roverPi system...")
     
         #Need to implement initialization logic here ....
         self.wheel_calibration()
@@ -43,27 +43,27 @@ class MainLogicNode(Node):
         self.camera2_calibration()
         self.imu_calibration()
 
-        self.get_logger().info("Initializing of tibro-roverPi is completed. ")
+        self.get_logger().info("Initializing of tibro-roverPi is completed")
 
     def wheel_calibration(self):
-        self.get_logger().info("Initializing the steering servos... ")
+        self.get_logger().info("Initializing the steering servos...")
 
         self.controller.load_neutral_positions()
         self.controller.initialize_steering_state()
 
-        self.get_logger().info("Finished calibrating the steering servos for straight forward motion. ")
+        self.get_logger().info("Finished calibrating the steering servos")
         return
 
     def camera1_calibration(self):
-        self.get_logger().info("Starting stereo camera calibraiton sequence. ")
+        self.get_logger().info("Starting stereo camera calibraiton sequence")
         return
 
     def camera2_calibration(self):
-        self.get_logger().info("Starting rasPi cam module2 calibraiton sequence. ")
+        self.get_logger().info("Starting rasPi cam module2 calibraiton sequence")
         return
 
     def imu_calibration(self):
-        self.get_logger().info("Starting IMU calibraiton sequence. ")
+        self.get_logger().info("Starting IMU calibraiton sequence")
         return
     
 
@@ -232,8 +232,10 @@ class MainLogicNode(Node):
             self.get_logger().info(f"Set {wheel_name} steering to {angle} degrees")
 
         elif command == "update_steering": # TEST
-            self.controller.update_steering_neutral_positions()
-            self.controller.save_neutral_positions()
+            for wheel, neutral_angle in self.steering_neutral.items():
+                self.controller.update_steering_neutral_positions(wheel, neutral_angle)            
+                self.controller.save_neutral_positions()
+                
             self.get_logger().info("Updated steering neutral positions to current angles and saved to file ")
 
         else:
