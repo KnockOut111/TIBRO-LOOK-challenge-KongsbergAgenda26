@@ -32,30 +32,30 @@ class LocomotionController():
         self.RIGHT_FORWARD = 1
         self.RIGHT_BACKWARD = 0
 
-        self.steering_neutral = {
-            SteeringServos.FL: 90,
-            SteeringServos.FR: 90,
-            SteeringServos.CL: 90,
-            SteeringServos.CR: 90,
-            SteeringServos.RL: 90,
-            SteeringServos.RR: 90,
-        }
+        # self.steering_neutral = {
+        #     SteeringServos.FL: 90,
+        #     SteeringServos.FR: 90,
+        #     SteeringServos.CL: 90,
+        #     SteeringServos.CR: 90,
+        #     SteeringServos.RL: 90,
+        #     SteeringServos.RR: 90,
+        # }
 
         self.current_steering_angles = {}
         
 
 ### Steering servo initialization, calibration, storage and loading ###
-    def initialize_steering_state(self):
+    def initialize_steering_state(self, steering_neutral):
         print("Initializing steering servo state...")
 
-        for wheel, neutral_angle in self.steering_neutral.items():
+        for wheel, neutral_angle in steering_neutral.items():
             self.set_wheel_steering(wheel, neutral_angle)
             self.current_steering_angles[wheel] = neutral_angle
         
         print("Steering servos initialized to neutral positions")
 
-    def update_steering_neutral_positions(self, wheel: SteeringServos, angle):
-        for wheel, neutral_angle in self.steering_neutral.items():
+    def update_steering_neutral_positions(self, wheel: SteeringServos, angle, steering_neutral):
+        for wheel, neutral_angle in steering_neutral.items():
             angle = max(0, min(180, angle))  # Ensure angle is within valid range
             self.update_neutral_position(wheel, neutral_angle)
 
@@ -63,24 +63,24 @@ class LocomotionController():
         self.steering_neutral[wheel] = angle
         print(f"Updated neutral position for {wheel.name} to {angle} degrees")
     
-    def save_neutral_positions(self):
+    def save_neutral_positions(self, steering_neutral):
         data = {
             wheel.name: angle
-            for wheel, angle in self.steering_neutral.items()
+            for wheel, angle in steering_neutral.items()
         }
 
         with open("steering_calibration.json", "w") as f:
             json.dump(data, f, indent=4)
 
-    def load_neutral_positions(self):
+    def load_neutral_positions(self, steering_neutral):
         try:
             with open("steering_calibration.json", "r") as f:
                 data = json.load(f)
 
-            self.steering_neutral = {
+            steering_neutral.update({
                 SteeringServos[name]: angle
                 for name, angle in data.items()
-            }
+            })
 
             print("Loaded steering calibration")
 

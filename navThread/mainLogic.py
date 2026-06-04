@@ -12,6 +12,9 @@ from rclpy.executors import ExternalShutdownException
     ## Fix init servos steering func in locomotion controller and call it in the init of the main logic node.
     ## Test and start implementing init for cameras and IMU as well
 
+## Continue with steering servo initialization and calibration, and then implement the different locomotion modes propperly.
+## Test it!!
+
 class MainLogicNode(Node):
     def __init__(self):
         super().__init__("mainLogic_node")
@@ -24,6 +27,15 @@ class MainLogicNode(Node):
 
         self.active = False
         self.locomotion_mode = LocomotionModes.CRABBING
+
+        self.steering_neutral = {
+            SteeringServos.FL: 90,
+            SteeringServos.FR: 90,
+            SteeringServos.CL: 90,
+            SteeringServos.CR: 90,
+            SteeringServos.RL: 90,
+            SteeringServos.RR: 90,
+        }
 
         self.create_subscription(String, "/rover/mainMode", self.mode_callback, 10)
         self.create_subscription(String, "/rover/locoMode", self.locomotion_callback, 10)
@@ -48,8 +60,8 @@ class MainLogicNode(Node):
     def wheel_calibration(self):
         self.get_logger().info("Initializing the steering servos...")
 
-        self.controller.load_neutral_positions()
-        self.controller.initialize_steering_state()
+        self.controller.load_neutral_positions(self.steering_neutral)
+        self.controller.initialize_steering_state(self.steering_neutral)
 
         self.get_logger().info("Finished calibrating the steering servos")
         return
@@ -231,11 +243,11 @@ class MainLogicNode(Node):
             self.controller.set_wheel_steering(wheel, angle)
             self.get_logger().info(f"Set {wheel_name} steering to {angle} degrees")
 
-        elif command == "update_steering": # TEST
+        elif command == "update_steering": # TEST!!! - not done - work here
             for wheel, neutral_angle in self.steering_neutral.items():
-                self.controller.update_steering_neutral_positions(wheel, neutral_angle)            
-                self.controller.save_neutral_positions()
-                
+                self.controller.update_steering_neutral_positions(wheel, neutral_angle, self.steering_neutral)            
+                self.controller.save_neutral_positions(self.steering_neutral)
+
             self.get_logger().info("Updated steering neutral positions to current angles and saved to file ")
 
         else:
