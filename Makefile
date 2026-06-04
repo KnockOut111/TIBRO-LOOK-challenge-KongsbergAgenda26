@@ -2,11 +2,12 @@
 # This file creates a more user-friendly way to run the system.
 # It also makes it easier to run the system on different machines without having to remember all the different commands.
 
-
+### MAIN COMMANDS ###
 roverpi-startsys:
 	docker compose -f docker-compose.yml build
 	docker compose -f docker-compose.yml up -d
 	docker compose -f docker-compose.yml logs -f
+
 
 roverpi-build:
 	docker compose -f docker-compose.yml build
@@ -24,12 +25,8 @@ roverpi-stopsys:
 roverpi-restart:
 	docker compose -f docker-compose.yml restart 
 
-# Stops and removes conainers + orphans.
+# Stops and removes conainers + volumes + orphans.
 roverpi-stopclean: 
-	docker compose -f docker-compose.yml down --remove-orphans
-
-# Stops and removes conainers, volumes and orphans.
-roverpi-clean:
 	docker compose -f docker-compose.yml down -v --remove-orphans
 
 	
@@ -85,7 +82,12 @@ metal-sensor-stop:
 	docker compose -f docker-compose.yml stop metal_sensor_thread
 
 metal-sensor-clean:
-	docker compose -f docker-compose.yml down -v --remove-orphans
+	docker compose stop metal_sensor_thread
+	docker compose rm -f metal_sensor_thread
+	docker rmi metal_sensor_thread
+
+#docker compose -f docker-compose.yml down -v --remove-orphans
+
 
 metal-sensor-logs:
 	docker compose -f docker-compose.yml logs -f metal_sensor_thread

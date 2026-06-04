@@ -1,5 +1,6 @@
 # from localTesting.mainLogicLocal import main #for local testing without ROS2
 from mainLogic import main
+from locomotionController import LocomotionController, LocomotionModes, SteeringServos
 import time 
 
 def init_roverPi():
@@ -15,19 +16,24 @@ def init_roverPi():
 
     print("Initializing of tibro-roverPi is completed. ")
 
-def wheel_calibration():
+def wheel_calibration(self):
     print("Calibrating the servos for straight forward motion and 90 degree turn. ")
+
+    for steeringPos in SteeringServos:
+        self.LocomotionController.set_wheel_steering(steeringPos, 90) # Set all wheels to 90 degrees for straight forward motion. Adjust if needed.
+    
+    print("Finished calibrating the servos for straight forward motion. ")
     return
 
-def camera1_calibration():
+def camera1_calibration(self):
     print("Starting stereo camera calibraiton sequence. ")
     return
 
-def camera2_calibration():
+def camera2_calibration(self):
     print("Starting rasPi cam module2 calibraiton sequence. ")
     return
 
-def imu_calibration():
+def imu_calibration(self):
     print("Starting IMU calibraiton sequence. ")
     return
 
