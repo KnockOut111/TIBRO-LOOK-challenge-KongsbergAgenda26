@@ -34,10 +34,11 @@ class MainLogicNode(Node):
         self.init_roverPi()
         self.get_logger().info("MainLogicNode is running...")
 
+        if self.active:
+            self.starting_autonomous_mode()
+
     def init_roverPi(self):
         self.get_logger().info("Initializing roverPi system... ")
-
-        #time.sleep(1) #Simulating inittialization steps
     
         #Need to implement initialization logic here ....
         self.wheel_calibration()
@@ -253,6 +254,12 @@ class MainLogicNode(Node):
             self.controller.stop()  
             self.get_logger().info("Metal detected! Stopping rover and moving backward for more detailed investigation.")
 
+    def starting_autonomous_mode(self):
+        self.get_logger().info("Starting autonomous mode...")
+        # Implement autonomous behavior logic here, e.g.:
+        # - Use sensor data to navigate
+        # - Implement obstacle avoidance
+        # - Follow a predefined path or explore randomly
 
 def main(args=None):
     rclpy.init(args=args)
