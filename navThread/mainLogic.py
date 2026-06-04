@@ -34,9 +34,6 @@ class MainLogicNode(Node):
         self.init_roverPi()
         self.get_logger().info("MainLogicNode is running...")
 
-        if self.active:
-            self.starting_autonomous_mode()
-
     def init_roverPi(self):
         self.get_logger().info("Initializing roverPi system... ")
     
@@ -67,9 +64,19 @@ class MainLogicNode(Node):
     def imu_calibration(self):
         self.get_logger().info("Starting IMU calibraiton sequence. ")
         return
+    
+
+    def is_armed(self):
+        if not self.active:
+            self.get_logger().warn("Rover not armed. Remember to 'arm' first.")
+            return False
+        return True
 
 
     def mode_callback(self, msg):
+        if not self.is_armed():
+            return
+        
         mainMode = msg.data.strip().lower()
 
         if mainMode == "arm":
@@ -93,6 +100,10 @@ class MainLogicNode(Node):
             self.get_logger().warn(f"Invalid mode: {mainMode}")
 
     def locomotion_callback(self, msg):
+        if not self.is_armed():
+            self.get_logger().warn("Locomotion not set. Rover need to be armed! ")
+            return
+        
         locoMode = msg.data.strip().lower()
         parts = locoMode.split()
 
@@ -145,12 +156,12 @@ class MainLogicNode(Node):
         self.get_logger().info(f"Locomotion set to: {self.locomotion_mode.name}") #Test that this one logs correct and not double
 
     def command_callback(self, msg):
+        if not self.is_armed():
+            self.get_logger().warn("Ignoring command! ")
+            return
+        
         command = msg.data.strip().lower()
         parts = command.split()
-
-        if not self.active:
-            self.get_logger().warn("Ignoring command because rover is not armed")
-            return
 
         # Implement missing command handling logic here, e.g.:
         if command == "forward":
@@ -227,6 +238,10 @@ class MainLogicNode(Node):
             self.get_logger().warn(f"Unknown command: {command}")
 
     def sensor_callback(self, msg):
+        if not self.is_armed():
+            self.get_logger().warn("Ignoring command! ")
+            return
+        
         sensorMsg = msg.data.strip().lower()
         self.get_logger().info(f"Received sensor data: {sensorMsg}")
         
@@ -255,7 +270,12 @@ class MainLogicNode(Node):
             self.get_logger().info("Metal detected! Stopping rover and moving backward for more detailed investigation.")
 
     def starting_autonomous_mode(self):
+        if not self.is_armed():
+            self.get_logger().warn("Autonomous mode did not start. The rover needs to be armed!")
+            return
+        
         self.get_logger().info("Starting autonomous mode...")
+
         # Implement autonomous behavior logic here, e.g.:
         # - Use sensor data to navigate
         # - Implement obstacle avoidance
