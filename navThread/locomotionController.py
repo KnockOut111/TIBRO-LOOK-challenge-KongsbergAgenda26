@@ -54,13 +54,14 @@ class LocomotionController():
         
         print("Steering servos initialized to neutral positions")
 
-    def update_steering_neutral_positions(self, wheel: SteeringServos, angle, steering_neutral):
-        for wheel, neutral_angle in steering_neutral.items():
-            angle = max(0, min(180, angle))  # Ensure angle is within valid range
-            self.update_neutral_position(wheel, neutral_angle)
+    def update_steering_neutral_positions(self, wheel: SteeringServos, angle: int, steering_neutral):
+        angle = max(0, min(180, angle))
+        steering_neutral[wheel] = angle
+        self.current_steering_angles[wheel] = angle
+        print(f"Updated neutral position for {wheel.name} to {angle} degrees")
 
-    def update_neutral_position(self, wheel: SteeringServos, angle):
-        self.steering_neutral[wheel] = angle
+    def update_neutral_position(self, wheel: SteeringServos, angle, steering_neutral):
+        steering_neutral[wheel] = angle
         print(f"Updated neutral position for {wheel.name} to {angle} degrees")
     
     def save_neutral_positions(self, steering_neutral):
