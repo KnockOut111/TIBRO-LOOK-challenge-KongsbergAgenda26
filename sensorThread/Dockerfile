@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     i2c-tools \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY sensorThread/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
