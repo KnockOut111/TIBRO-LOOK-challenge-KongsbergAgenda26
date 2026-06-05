@@ -35,7 +35,7 @@ class MainLogicNode(Node):
         }
 
         # Timer setup
-        self.timers: dict[str, Timer] = {}
+        self.active_timers: dict[str, Timer] = {}
 
         # Subscriptions
         self.create_subscription(String, "/rover/mainMode", self.mode_callback, 10)
@@ -59,17 +59,17 @@ class MainLogicNode(Node):
             self.cancel_timer(name)
             callback()
 
-        self.timers[name] = self.create_timer(delay_seconds, timer_wrapper)
+        self.active_timers[name] = self.create_timer(delay_seconds, timer_wrapper)
 
     def cancel_timer(self, name: str) -> None:
-        timer = self.timers.pop(name, None)
+        timer = self.active_timers.pop(name, None)
         if timer is not None:
             timer.cancel()
 
     def cancel_all_timers(self) -> None:
-        for timer in self.timers.values():
+        for timer in self.active_timers.values():
             timer.cancel()
-        self.timers.clear()
+        self.active_timers.clear()
 
 
     ### Initialization and calibration functions ###

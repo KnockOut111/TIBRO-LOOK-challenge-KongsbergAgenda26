@@ -88,6 +88,8 @@ class LocomotionController():
         except FileNotFoundError:
             print("No steering calibration found, using defaults")
 
+
+
 ### Different set fuctions for different modes, e.g. set_mode, set_drive, set_steering, etc. ###
     def set_mode(self, mode: LocomotionModes):
         self.mode = mode
@@ -103,20 +105,16 @@ class LocomotionController():
             motor.throttle = right_speed
     
     def set_all_steering(self, angle):
+        angle = max(0, min(180, angle)) # Ensure angle is within valid range
         for servo in self.steering_servos:
             servo.angle = angle
 
     def set_wheel_steering(self, wheel: SteeringServos, angle):
-        angle = max(0, min(180, angle))  # Ensure angle is within valid range
+        angle = max(0, min(180, angle)) # Ensure angle is within valid range
         self.kit.servo[wheel.value].angle = angle
         self.current_steering_angles[wheel] = angle
 
 
-    def initialize_steering_servos(self, wheel: SteeringServos, angle):
-        angle = max(0, min(180, angle))  # Ensure angle is within valid range
-
-        self.kit.servo[wheel.value].angle = angle
-        self.current_steering_angles[wheel] = angle
 
 ### Main drive functions ###
     def stop(self):
@@ -149,29 +147,32 @@ class LocomotionController():
     #     print("Shutting down rover...")
 
 
-class AutonomousController():
-    def starting_procedure():
-        print("Starting up rover and driving off ramp...")
+### Own file ??? ###
+# class AutonomousController():
+#     def starting_procedure():
+#         print("Starting up rover and driving off ramp...")
 
-        # Drive off ramp until IMU shows planer surfaces again. 0 at beginning, 
-        # then tilt some degrees (going off ramp), 0 agan when off ramp + some deviation in level hight.
-        # As the ramp is higher up than the main area of traversal. 
+#         # Drive off ramp until IMU shows planer surfaces again. 0 at beginning, 
+#         # then tilt some degrees (going off ramp), 0 agan when off ramp + some deviation in level hight.
+#         # As the ramp is higher up than the main area of traversal. 
 
-    def scanning_mode(self):
-        print("Starting scanning the area by turning 360 degrees. ")
-        # Scan the area by turning 360 degrees in point_turn mode, as long as no obsticles are detected. 
-        # Simultaneously as stereo camera is taking in the suroundings. 
+#     def scanning_mode(self):
+#         print("Starting scanning the area by turning 360 degrees. ")
+#         # Scan the area by turning 360 degrees in point_turn mode, as long as no obsticles are detected. 
+#         # Simultaneously as stereo camera is taking in the suroundings. 
 
-    def main_loop(self):
-        print("Entering the main logic of the rover driving. ")
-        # Drive forward, untill object detected inside a given distance.
-        # Then stop, move backwards for 2s? then move random? left or right.
-        # Now continuing on the new path, until new object is 'detected' again or 
-        # innside the given limit of radius to possible obstacle.
+#     def main_loop(self):
+#         print("Entering the main logic of the rover driving. ")
+#         # Drive forward, untill object detected inside a given distance.
+#         # Then stop, move backwards for 2s? then move random? left or right.
+#         # Now continuing on the new path, until new object is 'detected' again or 
+#         # innside the given limit of radius to possible obstacle.
         
 
-class MetelDetectionController():
-    def metal_detected(bool):
-        metalDetected = bool
-        print("Metal detected! ")
+# class MetelDetectionController():
+    
+    
+#     def metal_detected(bool):
+#         metalDetected = bool
+#         print("Metal detected! ")
         
