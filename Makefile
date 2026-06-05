@@ -91,3 +91,22 @@ metal-sensor-clean:
 
 metal-sensor-logs:
 	docker compose -f docker-compose.yml logs -f metal_sensor_thread
+
+# IMU sensor docker targets
+imu-sensor-build:
+	docker compose -f docker-compose.yml up -d --build imu_sensor_thread
+	docker compose -f docker-compose.yml logs -f imu_sensor_thread
+
+imu-sensor-restart:
+	docker compose -f docker-compose.yml restart imu_sensor_thread
+
+imu-sensor-stop:
+	docker compose -f docker-compose.yml stop imu_sensor_thread
+
+imu-sensor-clean:
+	docker compose stop imu_sensor_thread
+	docker compose rm -f imu_sensor_thread
+	docker rmi imu_sensor_thread
+
+imu-sensor-logs:
+	docker compose -f docker-compose.yml logs -f imu_sensor_thread
