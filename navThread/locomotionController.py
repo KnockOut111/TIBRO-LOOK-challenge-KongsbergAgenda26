@@ -142,9 +142,6 @@ class LocomotionController():
         # This should work if wheels are calibrated at start, but maybe add a limit so that only 0 (straight) or 90 (sideways) is allowed.
 
 
-    # def shutdown_rover(self):
-    #     self.stop()
-    #     print("Shutting down rover...")
 
 
 ### Own file ??? ###
