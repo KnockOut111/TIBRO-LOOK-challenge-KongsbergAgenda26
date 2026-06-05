@@ -78,6 +78,11 @@ class MainLogicNode(Node):
 
         self.get_logger().info("Initializing of tibro-roverPi is completed")
 
+    def destroy_node(self):
+        for device in self.devices.values():
+            device.close()
+        super().destroy_node()
+
     def wheel_calibration(self):
         self.get_logger().info("Initializing the steering servos...")
         self.controller.load_neutral_positions()
@@ -345,7 +350,7 @@ def main(args=None):
     finally:
         mainLogic_node.cancel_all_timers()
         mainLogic_node.controller.stop()
-        mainLogic_node.destroy_node() # Remove or enable???
+        mainLogic_node.destroy_node() 
 
         if rclpy.ok():
             rclpy.shutdown()
