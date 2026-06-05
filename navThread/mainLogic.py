@@ -41,7 +41,7 @@ class MainLogicNode(Node):
         self.create_subscription(String, "/rover/mainMode", self.mode_callback, 10)
         self.create_subscription(String, "/rover/locoMode", self.locomotion_callback, 10)
         self.create_subscription(String, "/rover/command", self.command_callback, 10)
-        self.create_subscription(String, "/rover/sensorMsg", self.sensor_callback, 10)
+        self.create_subscription(String, "/rover/sensorMsg", self.autonomous_mode, 10)
         
         # Publishers
         self.shutdown_pub = self.create_publisher(String, "/rover/system_shutdown",10)
