@@ -267,6 +267,7 @@ class MainLogicNode(Node):
 
             wheel_name = parts[1].upper()
 
+
             try:
                 angle = int(parts[2])
                 wheel = SteeringServos[wheel_name]
