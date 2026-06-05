@@ -1,2 +1,2 @@
-adafruit-circuitpython-mpu6050==1.0.7
-adafruit-blinka==8.24.0
+adafruit-circuitpython-mpu6050
+adafruit-blinka
