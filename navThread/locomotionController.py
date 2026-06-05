@@ -26,59 +26,55 @@ class LocomotionController():
 
         self.mode = LocomotionModes.ACKERMANN
 
+        self.wheelState_crabbing = True
+
         self.STOP = -1
         self.LEFT_FORWARD = 0
         self.LEFT_BACKWARD = 1
         self.RIGHT_FORWARD = 1
         self.RIGHT_BACKWARD = 0
 
-        # self.steering_neutral = {
-        #     SteeringServos.FL: 90,
-        #     SteeringServos.FR: 90,
-        #     SteeringServos.CL: 90,
-        #     SteeringServos.CR: 90,
-        #     SteeringServos.RL: 90,
-        #     SteeringServos.RR: 90,
-        # }
+        self.steering_neutral = {
+            SteeringServos.FL: 90,
+            SteeringServos.FR: 90,
+            SteeringServos.CL: 90,
+            SteeringServos.CR: 90,
+            SteeringServos.RL: 90,
+            SteeringServos.RR: 90,
+        }
 
         self.current_steering_angles = {}
         
 
 ### Steering servo initialization, calibration, storage and loading ###
-    def initialize_steering_state(self, steering_neutral):
-        print("Initializing steering servo state...")
+    def setting_neutral_steering_states(self):
+        print("Setting neutral steering servo states...")
 
-        for wheel, neutral_angle in steering_neutral.items():
+        for wheel, neutral_angle in self.steering_neutral.items():
             self.set_wheel_steering(wheel, neutral_angle)
-            self.current_steering_angles[wheel] = neutral_angle
         
-        print("Steering servos initialized to neutral positions")
+        print("Steering servos set to neutral positions")
 
-    def update_steering_neutral_positions(self, wheel: SteeringServos, angle: int, steering_neutral):
+    def update_steering_neutral_positions(self, wheel: SteeringServos, angle: int):
         angle = max(0, min(180, angle))
-        steering_neutral[wheel] = angle
-        self.current_steering_angles[wheel] = angle
+        self.steering_neutral[wheel] = angle
         print(f"Updated neutral position for {wheel.name} to {angle} degrees")
 
-    def update_neutral_position(self, wheel: SteeringServos, angle, steering_neutral):
-        steering_neutral[wheel] = angle
-        print(f"Updated neutral position for {wheel.name} to {angle} degrees")
-    
-    def save_neutral_positions(self, steering_neutral):
+    def save_neutral_positions(self):
         data = {
             wheel.name: angle
-            for wheel, angle in steering_neutral.items()
+            for wheel, angle in self.steering_neutral.items()
         }
 
         with open("steering_calibration.json", "w") as f:
             json.dump(data, f, indent=4)
 
-    def load_neutral_positions(self, steering_neutral):
+    def load_neutral_positions(self):
         try:
             with open("steering_calibration.json", "r") as f:
                 data = json.load(f)
 
-            steering_neutral.update({
+            self.steering_neutral.update({
                 SteeringServos[name]: angle
                 for name, angle in data.items()
             })
@@ -97,23 +93,31 @@ class LocomotionController():
     def get_mode(self):
         return self.mode
 
+    # Set wheels for driving forward or backwards
     def set_drive(self, left_speed, right_speed):
         for motor in self.drive_motors_left:
             motor.throttle = left_speed
 
         for motor in self.drive_motors_right:
             motor.throttle = right_speed
-    
-    def set_all_steering(self, angle):
-        angle = max(0, min(180, angle)) # Ensure angle is within valid range
-        for servo in self.steering_servos:
-            servo.angle = angle
 
-    def set_wheel_steering(self, wheel: SteeringServos, angle):
+    # Resetting all wheels
+    def reset_to_neutral(self):
+        for wheel, angle in self.steering_neutral.items():
+            self.set_wheel_steering(wheel, angle)
+
+    # Setting one wheel to a given angle
+    def set_wheel_steering(self, wheel: SteeringServos, angle: int):
         angle = max(0, min(180, angle)) # Ensure angle is within valid range
         self.kit.servo[wheel.value].angle = angle
         self.current_steering_angles[wheel] = angle
 
+    # Setting all wheels to same amount of degrees
+    def set_all_steering_servos(self, angle: int):
+        angle = max(0, min(180, angle))
+        for wheel in SteeringServos:
+            self.set_wheel_steering(wheel, angle)
+        
 
 
 ### Main drive functions ###
@@ -126,22 +130,65 @@ class LocomotionController():
     def backward(self):
         self.set_drive(self.LEFT_BACKWARD, self.RIGHT_BACKWARD)
 
+    def right_turn(self):
+        self.wheelState_crabbing = False
+
+    def left_turn(self):
+        self.wheelState_crabbing = False
+
+    def forward_turn(self):
+        self.wheelState_crabbing = True
+
+    def backward_turn(self):
+        self.wheelState_crabbing = True
+
+
+
 ### Different locomotion modes ###
+    # Left and right turn is set each time the ackermann func is called. Need to be called periodic!
     def ackermann(self, steering_angle):
         self.set_wheel_steering(SteeringServos.FR, 90 - steering_angle) #Need checking of angles.
         self.set_wheel_steering(SteeringServos.FL, 90 + steering_angle)
 
+    # Only turn on the spot, so need only to know how long to turn or how many rounds wheels need to turn
     def point_turn(self):
-        angles = [45, 135, 90, 90, 135, 45] #Check if angles is on right servo pos
-        for servo, angle in zip(self.steering_servos, angles):
-            servo.angle = angle
-        #Fix so that only rear and front wheels turn in opposite direction, the middle ones must be still.
+        target_angles = {
+            SteeringServos.FL: 45,
+            SteeringServos.FR: 135,
+            SteeringServos.CL: 90,
+            SteeringServos.CR: 90,
+            SteeringServos.RL: 135,
+            SteeringServos.RR: 45,
+        } #Check if angles is on right servo pos
 
-    def crabbing(self, angle):
-        self.set_all_steering(90 + angle)
+        for wheel, angle in target_angles.items():
+            self.set_wheel_steering(wheel, angle)
+
+        #Motion: Fix so that only rear and front wheels turn in opposite direction, the middle ones must be still.
+
+    # Does not turn, only pointed forward or 90 deg sideways.
+    def crabbing(self):
+        if self.wheelState_crabbing:
+            for wheel, angle in self.steering_neutral.items():
+                if angle >= 90:
+                    self.set_wheel_steering(wheel, angle - 90) 
+                else:
+                    self.set_wheel_steering(wheel, 0)
+        else:
+            for wheel, angle in self.steering_neutral.items():
+                if angle <= 90:
+                    self.set_wheel_steering(wheel, angle + 90)
+                else:
+                    self.set_wheel_steering(wheel, angle + 0) #Maybe something else here as calibrating or something as it will be a case where the wheels are not properly alligned with driection of motion.
+                    print(f"Angle is greater than 90 and moving wheels 90 deg more does not make sense for wheel {wheel}, currently at {angle}. ")
         # This should work if wheels are calibrated at start, but maybe add a limit so that only 0 (straight) or 90 (sideways) is allowed.
+        # Motion: forward and backwards as normal
 
-
+        ### GPT suggestion ###
+        # def crabbing(self):
+        #     for wheel, neutral_angle in self.steering_neutral.items():
+        #         crab_angle = min(180, neutral_angle + 90)
+        #         self.set_wheel_steering(wheel, crab_angle)
 
 
 ### Own file ??? ###
@@ -166,10 +213,11 @@ class LocomotionController():
 #         # innside the given limit of radius to possible obstacle.
         
 
-# class MetelDetectionController():
-    
-    
-#     def metal_detected(bool):
-#         metalDetected = bool
-#         print("Metal detected! ")
-        
+class MetelDetectionController():
+    def __init__(self):
+        self.numberOfTimes_MetalDetected = 0
+
+    def metal_detected(self, bool):
+        if bool:
+            self.numberOfTimes_MetalDetected += 1
+            return

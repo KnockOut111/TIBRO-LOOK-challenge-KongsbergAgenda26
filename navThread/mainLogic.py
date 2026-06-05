@@ -6,8 +6,7 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from rclpy.executors import ExternalShutdownException
 
-from locomotionController import LocomotionController, LocomotionModes, SteeringServos
-
+from locomotionController import LocomotionController, LocomotionModes, SteeringServos, MetelDetectionController
 
 # Fix locomotion modes to work as it should, wheels are never set back to 90 degrees after turning, and point turn and crab steering are not implemented propperly.
 # Front Right wheel is still not working as intended. Need to find solution.
@@ -23,16 +22,11 @@ class MainLogicNode(Node):
         super().__init__("mainLogic_node")
         
         self.controller = LocomotionController()
+        self.metalSensorController = MetelDetectionController()
+
         self.active = False
         self.locomotion_mode = LocomotionModes.CRABBING
-        self.steering_neutral = {
-            SteeringServos.FL: 90,
-            SteeringServos.FR: 90,
-            SteeringServos.CL: 90,
-            SteeringServos.CR: 90,
-            SteeringServos.RL: 90,
-            SteeringServos.RR: 90,
-        }
+        
 
         # Timer setup
         self.active_timers: dict[str, Timer] = {}
@@ -86,10 +80,8 @@ class MainLogicNode(Node):
 
     def wheel_calibration(self):
         self.get_logger().info("Initializing the steering servos...")
-
-        self.controller.load_neutral_positions(self.steering_neutral)
-        self.controller.initialize_steering_state(self.steering_neutral)
-
+        self.controller.load_neutral_positions()
+        self.controller.setting_neutral_steering_states()
         self.get_logger().info("Finished calibrating the steering servos")
 
     def camera1_calibration(self):
@@ -168,27 +160,20 @@ class MainLogicNode(Node):
             self.get_logger().info(f"Ackermann activated at {steering_angle} degrees")
 
         elif loco_cmd == "point_turn":
+            if len(parts) != 1:
+                self.get_logger().warn("Input type required: point_turn")
+                return
             self.locomotion_mode = LocomotionModes.POINT_TURN
             self.controller.point_turn()
-            self.get_logger().info("Point turn activated")
+            self.get_logger().info("point_turn activated")
 
         elif loco_cmd == "crabbing": # TEST!!!!
-            if len(parts) != 2:
-                self.get_logger().warn("Input type required: crabbing 90")
+            if len(parts) != 1:
+                self.get_logger().warn("Input type required: crabbing")
                 return
-
-            try:
-                angle = int(parts[1])
-            except ValueError:
-                self.get_logger().warn(f"Invalid angle: {parts[1]}")
-                return
-            except IndexError:
-                self.get_logger().warn("Steering angle required for crabbing mode")
-                return
-
             self.locomotion_mode = LocomotionModes.CRABBING
-            self.controller.crabbing(angle)
-            self.get_logger().info(f"Crabbing activated at {angle} degrees")
+            self.controller.crabbing()
+            self.get_logger().info("crabbing activated")
 
         else:
             self.get_logger().warn(f"Invalid locomotion mode: {locoMode}")
@@ -212,7 +197,7 @@ class MainLogicNode(Node):
         
         cmd = parts[0]
 
-        # Implement missing command handling logic here, e.g.:
+        ### Main commands for moving the rover
         if cmd == "forward":
             self.controller.forward()
             self.get_logger().info("Moving forward")
@@ -225,7 +210,17 @@ class MainLogicNode(Node):
             self.controller.stop()
             self.get_logger().info("Stopping rover")
 
-        elif cmd == "left_turn": # TEST!!!!
+        elif cmd == "forward_turn":
+            self.controller.forward_turn()
+            self.get_logger().info("Setting forward motion")
+
+        elif cmd == "backward_turn":
+            self.controller.backward_turn()
+            self.get_logger().info("Setting backward motion")
+
+        
+
+        elif cmd == "left_turn": 
             if len(parts) != 2:
                 self.get_logger().warn("Input type required: left_turn 45")
                 return
@@ -239,10 +234,11 @@ class MainLogicNode(Node):
                 self.get_logger().warn("Turn angle required for left_turn")
                 return
             
-            self.controller.set_all_steering(90 - turn_angle)  # Need to fix stearing for different modes.
+            # Need to fix stearing for different modes.
+            self.controller.left_turn()
             self.get_logger().info("Turning left " + str(turn_angle) + " degrees. ")
 
-        elif cmd == "right_turn":  # TEST!!!!
+        elif cmd == "right_turn":  
             if len(parts) != 2:
                 self.get_logger().warn("Input type required: right_turn 45")
                 return
@@ -256,12 +252,13 @@ class MainLogicNode(Node):
                 self.get_logger().warn("Turn angle required for right_turn")
                 return
 
-            self.controller.set_all_steering(90 + turn_angle)  # Example angle, adjust as needed
+            # Example angle, adjust as needed
+            self.controller.right_turn()
             self.get_logger().info("Turning right " + str(turn_angle) + " degrees. ")
 
-        elif cmd == "reset_steering": # Out of date!
-            self.controller.set_all_steering(90)
-            self.get_logger().info("Resetting steering")
+        elif cmd == "reset_steering": 
+            self.controller.reset_to_neutral()
+            self.get_logger().info("Resetting steering servos")
 
         elif cmd == "set_wheel_steering": # TEST
             if len(parts) != 3:
@@ -283,17 +280,19 @@ class MainLogicNode(Node):
             self.controller.set_wheel_steering(wheel, angle)
             self.get_logger().info(f"Set {wheel_name} steering to {angle} degrees")
 
-        elif cmd == "update_steering": # TEST!!! - not done - work here
+        elif cmd == "update_steering": 
             for wheel, angle in self.controller.current_steering_angles.items():
-                self.controller.update_steering_neutral_positions(wheel, angle, self.steering_neutral)
+                self.controller.update_steering_neutral_positions(wheel, angle)
 
-            self.controller.save_neutral_positions(self.steering_neutral)
+            self.controller.save_neutral_positions()
             self.get_logger().info("Updated steering neutral positions to current angles and saved to file ")
 
         else:
             self.get_logger().warn(f"Unknown command: {command}")
 
 
+
+    ### Need to set autonomous mode up with subscribers for metal_sensor data
     ### Autonomy response functions ###
     def autonomous_mode(self, msg):
         if not self.is_armed():
@@ -307,28 +306,22 @@ class MainLogicNode(Node):
         
         if sensorMsg == "obstacle_detected":
             self.get_logger().info("Obstacle detected! Stopping rover.")
-            self.start_timer("stop_delay",1.0, self.controller.stop())  # Pause briefly before moving backward
+            self.controller.stop()
+            self.start_timer("stop_delay", 1.0, self.controller.backward) 
             
             self.get_logger().info("Moving backward and making a stop.")
-            self.start_timer(3.0, self.controller.backward())  # Move backward for a short duration
-            self.controller.stop()
+            self.start_timer("backwards_delay", 3.0, self.controller.stop) 
 
         elif sensorMsg == "clear_path":
             self.controller.forward()
             self.get_logger().info("Path is clear. Moving forward.")
 
-        elif sensorMsg == "metal_detected":
-            # self.controller.logMetal() # Need to implement this function in the locomotion controller, to log the detection and maybe trigger some specific behavior, e.g. stopping and moving backward for a closer investigation of the metal object with the cameras, and then publish the findings to a topic for further analysis.
-            
-            ### Thinking about dropping this and making a simpler solution ###
-            # self.controller.stop()  
-            # self.start_one_shot_timer(1.0, lambda: None)  # Pause briefly before moving backward
-            # self.controller.backward()
-            # self.start_one_shot_timer(2.0, lambda: None)  # Move backward for a short duration
-            # #Run piCam AI image recognition for more detailed investigation of the metal object or similar, 
-            # # and publish findings to a topic for further analysis.
-            # self.controller.stop()  
-            self.get_logger().info("Metal detected! Stopping rover and moving backward for more detailed investigation.")
+        elif sensorMsg == "metal_detected":            
+            # Alternatively make it stop and use cameras for better recognision with AI
+            self.metalSensorController.metal_detected(True)
+            self.get_logger().info(f"Metal detected! Number of total detections: {self.metalSensorController.numberOfTimes_MetalDetected} ") # Test
+            #Log number of times metal is detected to file. 
+
 
         # Implement autonomous behavior logic here, e.g.:
         # - Use sensor data to navigate
@@ -349,9 +342,9 @@ def main(args=None):
         pass
 
     finally:
-        mainLogic_node.cancel_recovery_sequence()
+        mainLogic_node.cancel_all_timers()
         mainLogic_node.controller.stop()
-        mainLogic_node.destroy_node()
+        mainLogic_node.destroy_node() # Remove or enable???
 
         if rclpy.ok():
             rclpy.shutdown()

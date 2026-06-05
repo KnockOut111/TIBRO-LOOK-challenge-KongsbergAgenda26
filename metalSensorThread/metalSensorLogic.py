@@ -28,12 +28,7 @@ class MetalSensorNode(Node):
 		super().__init__("metal_sensor_node")
 
 		#Defining a callback for the shutdown topic 
-		self.create_subscription( 
-			String,
-            "/rover/system_shutdown",
-            self.shutdown_callback,
-            10
-        )
+		self.create_subscription( String, "/rover/system_shutdown", self.shutdown_callback, 10)
 
 		self.get_logger().info("Metal sensor node started")
 
