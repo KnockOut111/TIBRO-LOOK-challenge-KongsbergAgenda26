@@ -8,6 +8,7 @@ from rclpy.executors import ExternalShutdownException
 
 from locomotionController import LocomotionController, LocomotionModes, SteeringServos, MetelDetectionController
 
+
 # Fix locomotion modes to work as it should, wheels are never set back to 90 degrees after turning, and point turn and crab steering are not implemented propperly.
 # Front Right wheel is still not working as intended. Need to find solution.
 # Need to make a function for calibrating the servos, maybe as an itialization step in the beginning of the program, to ensure that 90 degrees is actually straight for all wheels.
@@ -23,6 +24,7 @@ class MainLogicNode(Node):
         
         self.controller = LocomotionController()
         self.metalSensorController = MetelDetectionController()
+        
 
         self.active = False
         self.locomotion_mode = LocomotionModes.CRABBING
@@ -37,7 +39,7 @@ class MainLogicNode(Node):
         self.create_subscription(String, "/rover/command", self.command_callback, 10)
         self.create_subscription(String, "/rover/sensorMsg", self.autonomous_mode, 10)
         
-        self.create_subscribtion(String, "/sensors/imu_", self.autonomous_mode, 10)
+        self.create_subscription(String, "/sensors/imu_", self.autonomous_mode, 10)
 
         # Publishers
         self.shutdown_pub = self.create_publisher(String, "/rover/system_shutdown",10)
