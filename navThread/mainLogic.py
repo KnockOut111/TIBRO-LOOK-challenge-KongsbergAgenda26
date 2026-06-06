@@ -333,9 +333,12 @@ class MainLogicNode(Node):
             #Log number of times metal is detected to file. 
         
         elif sensorMsg == "show_imu_data":
-            #
+            # Show IMU data placeholder
+            self.get_logger().info("IMU data request received")
+            # TODO: publish or log actual IMU readings here
 
-
+            #0x68 - imu1
+            #0x69 - imu2
 
         # Implement autonomous behavior logic here, e.g.:
         # - Use sensor data to navigate - IMU at start, turning using point turn etc.
