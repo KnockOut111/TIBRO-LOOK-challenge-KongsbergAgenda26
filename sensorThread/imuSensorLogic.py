@@ -92,7 +92,7 @@ class ImuSensorNode(Node):
                 msg.orientation = self.estimate_orientation_from_imu(
                     addr, ax, ay, az, gx, gy, gz
                 )
-                self.get_logger().info(f"Estimated orientation {msg.orientation[0]}")
+                self.get_logger().info(f"Estimated orientation {msg.orientation.x}")
 
                 self.set_covariances(msg)
             else:
