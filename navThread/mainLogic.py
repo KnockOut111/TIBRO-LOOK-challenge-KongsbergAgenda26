@@ -37,6 +37,8 @@ class MainLogicNode(Node):
         self.create_subscription(String, "/rover/command", self.command_callback, 10)
         self.create_subscription(String, "/rover/sensorMsg", self.autonomous_mode, 10)
         
+        self.create_subscribtion(String, "/sensors/imu_", self.autonomous_mode, 10)
+
         # Publishers
         self.shutdown_pub = self.create_publisher(String, "/rover/system_shutdown",10)
 
@@ -298,6 +300,7 @@ class MainLogicNode(Node):
 
 
 
+
     ### Need to set autonomous mode up with subscribers for metal_sensor data
     ### Autonomy response functions ###
     def autonomous_mode(self, msg):
@@ -310,6 +313,7 @@ class MainLogicNode(Node):
         sensorMsg = msg.data.strip().lower()
         self.get_logger().info(f"Received sensor data: {sensorMsg}")
         
+        ### State machine ###
         if sensorMsg == "obstacle_detected":
             self.get_logger().info("Obstacle detected! Stopping rover.")
             self.controller.stop()
@@ -327,13 +331,27 @@ class MainLogicNode(Node):
             self.metalSensorController.metal_detected(True)
             self.get_logger().info(f"Metal detected! Number of total detections: {self.metalSensorController.numberOfTimes_MetalDetected} ") # Test
             #Log number of times metal is detected to file. 
+        
+        elif sensorMsg == "show_imu_data":
+            #
+
 
 
         # Implement autonomous behavior logic here, e.g.:
-        # - Use sensor data to navigate
+        # - Use sensor data to navigate - IMU at start, turning using point turn etc.
         # - Implement obstacle avoidance
         # - Follow a predefined path or explore randomly
 
+        if self.locomotion_mode == LocomotionModes.ACKERMANN:
+            #do something
+            #Fill with topics
+            self.get_logger().warn("ACKERMANN modus enabled")
+        elif self.locomotion_mode == LocomotionModes.POINT_TURN:
+            #do something
+            self.get_logger().warn("POINT_TURN modus enabled")
+        elif self.locomotion_mode == LocomotionModes.CRABBING:
+            #do something
+            self.get_logger().warn("CRABBING modus enabled")
         else:
             self.get_logger().warn(f"Unknown sensor message: {sensorMsg}")
 

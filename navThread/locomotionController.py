@@ -110,7 +110,7 @@ class LocomotionController():
     def set_wheel_steering(self, wheel: SteeringServos, angle: int):
         angle = max(0, min(180, angle)) # Ensure angle is within valid range
         self.kit.servo[wheel.value].angle = angle
-        self.current_steering_angles[wheel] = angle
+        #self.current_steering_angles[wheel] = angle #Uncomment if new values are wante to calibrate for neutral pos
 
     # Setting all wheels to same amount of degrees
     def set_all_steering_servos(self, angle: int):
@@ -171,13 +171,13 @@ class LocomotionController():
         if self.wheelState_crabbing:
             for wheel, angle in self.steering_neutral.items():
                 if angle >= 90:
-                    self.set_wheel_steering(wheel, angle - 90) 
+                    self.set_wheel_steering(wheel, angle - 100) #Increse this and the one bellow? 
                 else:
                     self.set_wheel_steering(wheel, 0)
         else:
             for wheel, angle in self.steering_neutral.items():
                 if angle <= 90:
-                    self.set_wheel_steering(wheel, angle + 90)
+                    self.set_wheel_steering(wheel, angle + 100)
                 else:
                     self.set_wheel_steering(wheel, angle + 0) #Maybe something else here as calibrating or something as it will be a case where the wheels are not properly alligned with driection of motion.
                     print(f"Angle is greater than 90 and moving wheels 90 deg more does not make sense for wheel {wheel}, currently at {angle}. ")
