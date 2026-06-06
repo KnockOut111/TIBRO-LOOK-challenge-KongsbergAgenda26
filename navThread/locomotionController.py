@@ -27,6 +27,9 @@ class LocomotionController():
         self.mode = LocomotionModes.ACKERMANN
 
         self.wheelState_crabbing = True
+        self.right_turn_ack = False
+        self.left_turn_ack = False
+
 
         self.STOP = -1
         self.LEFT_FORWARD = 0
@@ -147,8 +150,18 @@ class LocomotionController():
 ### Different locomotion modes ###
     # Left and right turn is set each time the ackermann func is called. Need to be called periodic!
     def ackermann(self, steering_angle):
-        self.set_wheel_steering(SteeringServos.FR, 90 - steering_angle) #Need checking of angles.
-        self.set_wheel_steering(SteeringServos.FL, 90 + steering_angle)
+        if self.right_turn_ack == True:
+            self.set_wheel_steering(SteeringServos.FR, 90 - steering_angle) #Need checking of angles.
+            self.set_wheel_steering(SteeringServos.FL, 90 + steering_angle)
+            self.right_turn_ack = False
+
+        elif self.left_turn_ack == True:
+            self.set_wheel_steering(SteeringServos.FR, 90 - steering_angle) #Need checking of angles.
+            self.set_wheel_steering(SteeringServos.FL, 90 + steering_angle)
+            self.left_turn_ack = False
+
+        else:
+            self.reset_to_neutral()
 
     # Only turn on the spot, so need only to know how long to turn or how many rounds wheels need to turn
     def point_turn(self):
@@ -166,7 +179,7 @@ class LocomotionController():
 
         #Motion: Fix so that only rear and front wheels turn in opposite direction, the middle ones must be still.
 
-    # Does not turn, only pointed forward or 90 deg sideways.
+    # Only pointed forward or 90 deg sideways.
     def crabbing(self):
         if self.wheelState_crabbing:
             for wheel, angle in self.steering_neutral.items():
@@ -191,27 +204,7 @@ class LocomotionController():
         #         self.set_wheel_steering(wheel, crab_angle)
 
 
-### Own file ??? ###
-# class AutonomousController():
-#     def starting_procedure():
-#         print("Starting up rover and driving off ramp...")
 
-#         # Drive off ramp until IMU shows planer surfaces again. 0 at beginning, 
-#         # then tilt some degrees (going off ramp), 0 agan when off ramp + some deviation in level hight.
-#         # As the ramp is higher up than the main area of traversal. 
-
-#     def scanning_mode(self):
-#         print("Starting scanning the area by turning 360 degrees. ")
-#         # Scan the area by turning 360 degrees in point_turn mode, as long as no obsticles are detected. 
-#         # Simultaneously as stereo camera is taking in the suroundings. 
-
-#     def main_loop(self):
-#         print("Entering the main logic of the rover driving. ")
-#         # Drive forward, untill object detected inside a given distance.
-#         # Then stop, move backwards for 2s? then move random? left or right.
-#         # Now continuing on the new path, until new object is 'detected' again or 
-#         # innside the given limit of radius to possible obstacle.
-        
 
 class MetelDetectionController():
     def __init__(self):

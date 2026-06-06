@@ -90,7 +90,6 @@ class MainLogicNode(Node):
         self.camera1_calibration()
         self.camera2_calibration()
         self.imu_calibration()
-
         self.get_logger().info("Initializing of tibro-roverPi is completed")
 
     def destroy_node(self):
@@ -292,10 +291,12 @@ class MainLogicNode(Node):
             self.controller.right_turn()
             self.get_logger().info("Turning right " + str(turn_angle) + " degrees. ")
 
+        # Setts all wheels to degrees given in steering_neatural 
         elif cmd == "reset_steering": 
             self.controller.reset_to_neutral()
             self.get_logger().info("Resetting steering servos")
 
+        # Sets a specific wheel at a given degree
         elif cmd == "set_wheel_steering": # TEST
             if len(parts) != 3:
                 self.get_logger().warn("Input need to be on this form: set_wheel_steering FR 90")
@@ -317,6 +318,7 @@ class MainLogicNode(Node):
             self.controller.set_wheel_steering(wheel, angle)
             self.get_logger().info(f"Set {wheel_name} steering to {angle} degrees")
 
+        #Updates neutral steering parameters with current_steering_angles - straight motion default
         elif cmd == "update_steering": 
             for wheel, angle in self.controller.current_steering_angles.items():
                 self.controller.update_steering_neutral_positions(wheel, angle)
@@ -361,11 +363,6 @@ class MainLogicNode(Node):
             self.get_logger().info(f"Metal detected! Number of total detections: {self.metalSensorController.numberOfTimes_MetalDetected} ") # Test
             #Log number of times metal is detected to file. 
         
-        elif sensorMsg == "show_imu_data":
-            # Show IMU data placeholder
-            self.get_logger().info("IMU data request received")
-            # TODO: publish or log actual IMU readings here
-
             #0x68 - imu1
             #0x69 - imu2
 
@@ -375,8 +372,7 @@ class MainLogicNode(Node):
         # - Follow a predefined path or explore randomly
 
         if self.locomotion_mode == LocomotionModes.ACKERMANN:
-            #do something
-            #Fill with topics
+            self.controller.ackermann()
             self.get_logger().warn("ACKERMANN modus enabled")
         elif self.locomotion_mode == LocomotionModes.POINT_TURN:
             #do something
@@ -400,7 +396,6 @@ def main(args=None):
     finally:
         mainLogic_node.cancel_all_timers()
         mainLogic_node.controller.stop()
-        # mainLogic_node.destroy_node() 
 
         if rclpy.ok():
             rclpy.shutdown()
