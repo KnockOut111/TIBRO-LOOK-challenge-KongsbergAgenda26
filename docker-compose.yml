@@ -37,24 +37,24 @@ services:
       - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
     command: python3 -u metalSensorLogic.py
   
-  imu_sensor_thread:
-    build:
-      context: .
-      dockerfile: sensorThread/Dockerfile
-    container_name: roverpi-imu_sensor_thread
-    privileged: true
-    devices:
-      - /dev/i2c-1:/dev/i2c-1
-      - /dev/gpiomem:/dev/gpiomem
-      - /dev/gpiochip0:/dev/gpiochip0
+  # imu_sensor_thread:
+  #   build:
+  #     context: .
+  #     dockerfile: sensorThread/Dockerfile
+  #   container_name: roverpi-imu_sensor_thread
+  #   privileged: true
+  #   devices:
+  #     - /dev/i2c-1:/dev/i2c-1
+  #     - /dev/gpiomem:/dev/gpiomem
+  #     - /dev/gpiochip0:/dev/gpiochip0
 
-    volumes:
-      - ./sensorThread:/app
-    environment:
-      - PYTHONUNBUFFERED=1
-      - PYTHONPATH=/app
-      - BLINKA_FORCECHIP=BCM2XXX
-    command: python3 -u imuSensorLogic.py
+  #   volumes:
+  #     - ./sensorThread:/app
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - PYTHONPATH=/app
+  #     - BLINKA_FORCECHIP=BCM2XXX
+  #   command: python3 -u imuSensorLogic.py
 
 # IMU Possibly also wheel odometry data, but currently not implemented. Missing encoders for this to work?
   # imu_sensor_thread:
