@@ -45,6 +45,9 @@ services:
     privileged: true
     devices:
       - /dev/i2c-1:/dev/i2c-1
+      - /dev/gpiomem:/dev/gpiomem
+      - /dev/gpiochip0:/dev/gpiochip0
+
     volumes:
       - ./sensorThread:/app
     environment:

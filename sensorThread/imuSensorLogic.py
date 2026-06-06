@@ -39,12 +39,12 @@ class ImuSensorNode(Node):
         self.i2c = busio.I2C(board.SCL, board.SDA)
 
         self.imus = {}
-        self.publishers = {}
+        self.imu_publishers = {}
 
         for addr in addresses:
             self.imus[addr] = adafruit_mpu6050.MPU6050(self.i2c, address=addr)
             topic_name = f"sensors/imu_{addr:x}"
-            self.publishers[addr] = self.create_publisher(Imu, topic_name, 10)
+            self.imu_publishers[addr] = self.create_publisher(Imu, topic_name, 10)
 
         self.timer = self.create_timer(1.0 / rate, self.publish_imus)
 
@@ -63,7 +63,7 @@ class ImuSensorNode(Node):
             # orientation is not estimated in this node right now, maybe add or overkill?
             msg.orientation_covariance[0] = -1.0
 
-            self.publishers[addr].publish(msg)
+            self.imu_publishers[addr].publish(msg)
 
     def destroy_node(self):
         if hasattr(self, "i2c") and hasattr(self.i2c, "deinit"):
