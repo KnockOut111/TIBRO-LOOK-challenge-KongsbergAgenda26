@@ -77,6 +77,10 @@ class ImuSensorNode(Node):
             ax, ay, az = imu.acceleration
             gx, gy, gz = imu.gyro
 
+            self.get_logger().info(f"acceleration: {ax, ay, az}")
+            self.get_logger().info(f"gyro: {gx, gy, gz}")
+
+
             msg = Imu()
             msg.header.stamp = self.get_clock().now().to_msg()
             msg.header.frame_id = f"imu_{addr:x}"
@@ -88,6 +92,8 @@ class ImuSensorNode(Node):
                 msg.orientation = self.estimate_orientation_from_imu(
                     addr, ax, ay, az, gx, gy, gz
                 )
+                self.get_logger().info(f"Estimated orientation {msg.orientation[0]}")
+
                 self.set_covariances(msg)
             else:
                 msg.orientation_covariance[0] = -1.0
