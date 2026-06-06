@@ -3,10 +3,11 @@ from rclpy.node import Node
 import cv2
 import numpy as np
 from std_msgs.msg import String
-from vision_msgs.msg import Detection2DArray, Detection2D
+from vision_msgs.msg import Detection2DArray, Detection2D, ObjectHypothesisWithPose
 import requests
 import onnxruntime as ort
 import os
+import json
 from app_detect import COCO_CLASSES, get_camera, MODEL_PATH
 
 class PiCam2Node(Node):
@@ -14,7 +15,18 @@ class PiCam2Node(Node):
         super().__init__("picam2_node")
         
         self.declare_parameter("server_url", "http://localhost:5000/api/upload")
+        self.declare_parameter("capture_rate_hz", 2.0)
+        self.declare_parameter("confidence_threshold", 0.4)
         self.server_url = self.get_parameter("server_url").value
+        self.confidence_threshold = float(
+            self.get_parameter("confidence_threshold").value
+        )
+        capture_rate = float(self.get_parameter("capture_rate_hz").value)
+        if capture_rate <= 0.0:
+            self.get_logger().warning(
+                f"capture_rate_hz={capture_rate} is invalid, falling back to 2.0 Hz"
+            )
+            capture_rate = 2.0
         
         # Load YOLOv8 model
         self.model = self.load_model()
@@ -35,8 +47,7 @@ class PiCam2Node(Node):
             10
         )
         
-        # capture and detect every 100ms
-        self.timer = self.create_timer(0.1, self.capture_and_detect)
+        self.timer = self.create_timer(1.0 / capture_rate, self.capture_and_detect)
         self.get_logger().info(f"PiCam2 node started. Server URL: {self.server_url}")
     
     def load_model(self):
@@ -53,17 +64,20 @@ class PiCam2Node(Node):
             return None
     
     def capture_and_detect(self):
-        """Capture frame, run YOLOv8, publish detections + send to server"""
+        """Capture frame, optionally run YOLOv8, publish detections + send to server"""
         try:
-            if self.model is None:
-                return
-            
             # Capture frame
             frame = self.camera.capture_array()
             orig_h, orig_w = frame.shape[:2]
             
-            # Run detection
-            detections = self.detect_objects(frame, orig_h, orig_w)
+            detections = []
+            if self.model is not None:
+                detections = self.detect_objects(
+                    frame,
+                    orig_h,
+                    orig_w,
+                    conf_threshold=self.confidence_threshold,
+                )
             
             # Publish detections to navThread
             self.publish_detections(detections)
@@ -151,9 +165,9 @@ class PiCam2Node(Node):
             detection_2d.bbox.size_x = float(x2 - x1)
             detection_2d.bbox.size_y = float(y2 - y1)
             
-            result = Detection2D()
-            result.hypothesis.class_name = det["label"]
-            result.hypothesis.likelihood = det["confidence"]
+            result = ObjectHypothesisWithPose()
+            result.hypothesis.class_id = det["label"]
+            result.hypothesis.score = det["confidence"]
             detection_2d.results.append(result)
             
             detection_array.detections.append(detection_2d)
@@ -163,10 +177,9 @@ class PiCam2Node(Node):
     def send_to_server(self, frame, detections):
         """Send frame + detections to external web server"""
         try:
-            # Encode frame to JPEG
+            # get frame to JPEG
             _, buffer = cv2.imencode('.jpg', frame)
             
-            # Prepare detection data
             detection_data = [
                 {
                     "label": det["label"],
@@ -176,9 +189,9 @@ class PiCam2Node(Node):
                 for det in detections
             ]
             
-            # Send to server
+            # send
             files = {'image': ('frame.jpg', buffer.tobytes())}
-            data = {'detections': str(detection_data)}
+            data = {'detections': json.dumps(detection_data)}
             
             response = requests.post(self.server_url, files=files, data=data, timeout=2)
             

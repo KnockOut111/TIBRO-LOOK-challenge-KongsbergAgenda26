@@ -3,9 +3,10 @@ import types
 import os
 import time
 import json
+import shutil
 import numpy as np
 import cv2
-from flask import Flask, render_template, jsonify, send_from_directory
+from flask import Flask, render_template, jsonify, send_from_directory, request
 
 app = Flask(__name__, template_folder="templates")
 
@@ -14,6 +15,15 @@ DETECT_DIR = os.path.join(os.path.dirname(__file__), "photos_detected")
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "yolov8n.onnx")
 os.makedirs(PHOTO_DIR, exist_ok=True)
 os.makedirs(DETECT_DIR, exist_ok=True)
+LATEST_RAW = "latest_raw.jpg"
+LATEST_DETECTED = "latest_detected.jpg"
+latest_frame = {
+    "raw": None,
+    "detected": None,
+    "detections": [],
+    "timestamp": None,
+    "source": None,
+}
 
 # COCO class names (80 classes YOLOv8 was trained on)
 COCO_CLASSES = [
@@ -32,6 +42,12 @@ COCO_CLASSES = [
 # Generate a distinct color per class
 def class_color(cls_id):
     np.random.seed(cls_id * 7 + 13)
+    return tuple(int(c) for c in np.random.randint(80, 255, 3))
+
+
+def label_color(label):
+    seed = sum((i + 1) * ord(c) for i, c in enumerate(label))
+    np.random.seed(seed)
     return tuple(int(c) for c in np.random.randint(80, 255, 3))
 
 # Load ONNX model once at startup
@@ -155,6 +171,51 @@ def run_detection(image_path, out_path, conf_threshold=0.4, iou_threshold=0.45):
     return detections
 
 
+def draw_detections(img, detections):
+    result_img = img.copy()
+    for det in detections:
+        box = det.get("box")
+        if not box or len(box) != 4:
+            continue
+
+        x1, y1, x2, y2 = [int(v) for v in box]
+        label = str(det.get("label", "object"))
+        confidence = float(det.get("confidence", 0.0))
+        color = label_color(label)
+
+        cv2.rectangle(result_img, (x1, y1), (x2, y2), color, 2)
+        text = f"{label} {confidence:.0%}"
+        (tw, th), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.55, 1)
+        label_y = max(y1, th + 6)
+        cv2.rectangle(
+            result_img,
+            (x1, label_y - th - 6),
+            (x1 + tw + 6, label_y),
+            color,
+            -1,
+        )
+        cv2.putText(
+            result_img,
+            text,
+            (x1 + 3, label_y - 3),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.55,
+            (0, 0, 0),
+            1,
+            cv2.LINE_AA,
+        )
+
+    return result_img
+
+
+def remember_latest(raw_filename, detected_filename, detections, source):
+    latest_frame["raw"] = raw_filename
+    latest_frame["detected"] = detected_filename
+    latest_frame["detections"] = detections
+    latest_frame["timestamp"] = time.time()
+    latest_frame["source"] = source
+
+
 @app.route("/")
 def index():
     return render_template("index_detect.html")
@@ -177,6 +238,9 @@ def capture():
         t0 = time.time()
         detections = run_detection(raw_path, det_path)
         elapsed = round(time.time() - t0, 2)
+        shutil.copyfile(raw_path, os.path.join(PHOTO_DIR, LATEST_RAW))
+        shutil.copyfile(det_path, os.path.join(DETECT_DIR, LATEST_DETECTED))
+        remember_latest(raw_filename, det_filename, detections, "manual")
 
         return jsonify({
             "success": True,
@@ -199,6 +263,59 @@ def serve_detected(filename):
     return send_from_directory(DETECT_DIR, filename)
 
 
+@app.route("/api/upload", methods=["POST"])
+def upload():
+    try:
+        image = request.files.get("image")
+        if image is None:
+            return jsonify({"success": False, "error": "Missing image"}), 400
+
+        detections_raw = request.form.get("detections", "[]")
+        try:
+            detections = json.loads(detections_raw)
+        except json.JSONDecodeError:
+            detections = []
+
+        timestamp = int(time.time() * 1000)
+        raw_filename = f"upload_{timestamp}.jpg"
+        detected_filename = f"upload_detected_{timestamp}.jpg"
+        raw_path = os.path.join(PHOTO_DIR, raw_filename)
+        detected_path = os.path.join(DETECT_DIR, detected_filename)
+
+        image.save(raw_path)
+        img = cv2.imread(raw_path)
+        if img is None:
+            return jsonify({"success": False, "error": "Could not decode image"}), 400
+
+        detected_img = draw_detections(img, detections)
+        cv2.imwrite(detected_path, detected_img)
+        cv2.imwrite(os.path.join(PHOTO_DIR, LATEST_RAW), img)
+        cv2.imwrite(os.path.join(DETECT_DIR, LATEST_DETECTED), detected_img)
+
+        remember_latest(raw_filename, detected_filename, detections, "ros")
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/latest")
+def api_latest():
+    return jsonify({
+        "success": latest_frame["raw"] is not None,
+        **latest_frame,
+    })
+
+
+@app.route("/latest_raw.jpg")
+def latest_raw_image():
+    return send_from_directory(PHOTO_DIR, LATEST_RAW)
+
+
+@app.route("/latest_detected.jpg")
+def latest_detected_image():
+    return send_from_directory(DETECT_DIR, LATEST_DETECTED)
+
+
 @app.route("/latest")
 def latest():
     det_files = sorted(
@@ -215,5 +332,5 @@ def model_status():
 
 if __name__ == "__main__":
     load_model()
-    print("📷 PiCam DETECT server starting on http://localhost:5000")
-    app.run(host="127.0.0.1", port=5000, debug=False)
+    print("📷 PiCam DETECT server starting on http://0.0.0.0:5000")
+    app.run(host="0.0.0.0", port=5000, debug=False)

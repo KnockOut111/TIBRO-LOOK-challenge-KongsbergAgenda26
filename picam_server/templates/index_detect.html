@@ -431,6 +431,8 @@
   let shotCount = 0;
   let totalObjects = 0;
   let currentView = 'raw';  // 'raw' or 'detected'
+  let latestLiveTimestamp = null;
+  let latestLiveData = null;
   const photoHistory = []; // [{raw, detected, detections, inference_ms}]
 
   // Clock
@@ -514,6 +516,11 @@
     document.getElementById('btnDetected').classList.toggle('active', mode === 'detected');
     document.getElementById('btnRaw').classList.toggle('active', mode === 'raw');
 
+    if (latestLiveData) {
+      showLiveFrame(latestLiveData);
+      return;
+    }
+
     if (photoHistory.length === 0) return;
     const latest = photoHistory[0];
     const src = mode === 'detected'
@@ -521,6 +528,27 @@
       : `/photos/${latest.raw}?t=${Date.now()}`;
     const img = document.getElementById('mainPhoto');
     img.src = src;
+  }
+
+  function showLiveFrame(data) {
+    const img = document.getElementById('mainPhoto');
+    const empty = document.getElementById('emptyState');
+    const src = currentView === 'detected'
+      ? `/latest_detected.jpg?t=${Date.now()}`
+      : `/latest_raw.jpg?t=${Date.now()}`;
+
+    img.src = src;
+    img.style.display = 'block';
+    empty.style.display = 'none';
+    document.getElementById('currentFile').textContent = data.detected || 'LIVE FRAME';
+    renderDetections(data.detections || []);
+
+    const badge = document.getElementById('inferBadge');
+    badge.textContent = 'live';
+    badge.style.display = 'inline';
+
+    const n = (data.detections || []).length;
+    document.getElementById('footerInfo').textContent = `LIVE: ${n} obj`;
   }
 
   function showPhoto(entry) {
@@ -638,6 +666,30 @@
     } catch(e) {}
   }
   loadExisting();
+
+  async function pollLatestFrame() {
+    try {
+      const res = await fetch('/api/latest');
+      const data = await res.json();
+      if (!data.success || !data.timestamp || data.timestamp === latestLiveTimestamp) {
+        return;
+      }
+
+      latestLiveTimestamp = data.timestamp;
+      latestLiveData = data;
+      showLiveFrame(data);
+
+      const n = (data.detections || []).length;
+      shotCount++;
+      totalObjects += n;
+      document.getElementById('shotCount').textContent = shotCount;
+      document.getElementById('objCount').textContent = totalObjects;
+      log(`Live frame received · ${n} object${n !== 1 ? 's' : ''}`, 'info');
+    } catch(e) {}
+  }
+
+  setInterval(pollLatestFrame, 1000);
+  pollLatestFrame();
 </script>
 </body>
 </html>
