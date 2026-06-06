@@ -68,17 +68,23 @@ services:
   #   working_dir: /app
   #   command: python imuSensorThread.py  # Needs to set what is to run when the container starts, otherwise it will just run the default command which is to start a bash terminal
 
-# Stereo Camera thread for obstacle detection and avoidance. 
-  # stereo_camera_thread:
-  #   build: .
-  #   container_name: roverpi-stereo_camera_thread
-  #   privileged: true
-  #   devices:
-  #     - /dev/i2c-1:/dev/i2c-1
-  #   volumes:
-  #     - .:/app
-  #   working_dir: /app
-  #   command: python stereoCameraThread.py  # Needs to set what is to run when the container starts, otherwise it will just run the default command which is to start a bash terminal
+# Stereo/depth camera thread for obstacle detection and avoidance.
+  depth_camera_thread:
+    build:
+      context: .
+      dockerfile: mappingThread-Local/Dockerfile
+    container_name: roverpi-depth_camera_thread
+    privileged: true
+    network_mode: host
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    volumes:
+      - ./mappingThread-Remote/stereocamera:/app
+    working_dir: /app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
+    command: python3 -u depthCameraNode.py
 
 # Running Visual SLAM, estimating the position (pose) of the rover and building a map of the environment. 
   # mapping_thread:

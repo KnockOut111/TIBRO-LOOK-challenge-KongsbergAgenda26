@@ -4,6 +4,7 @@ from typing import Callable
 from rclpy.timer import Timer
 from rclpy.node import Node
 from std_msgs.msg import String
+from sensor_msgs.msg import Imu, LaserScan
 from rclpy.executors import ExternalShutdownException
 
 from locomotionController import LocomotionController, LocomotionModes, SteeringServos, MetelDetectionController
@@ -28,6 +29,10 @@ class MainLogicNode(Node):
 
         self.active = False
         self.locomotion_mode = LocomotionModes.CRABBING
+        self.latest_imu = {}
+        self.latest_depth_scan = None
+        self.latest_center_depth = None
+        self.obstacle_stop_distance = 0.8
         
 
         # Timer setup
@@ -38,8 +43,14 @@ class MainLogicNode(Node):
         self.create_subscription(String, "/rover/locoMode", self.locomotion_callback, 10)
         self.create_subscription(String, "/rover/command", self.command_callback, 10)
         self.create_subscription(String, "/rover/sensorMsg", self.autonomous_mode, 10)
-        
-        self.create_subscription(String, "/sensors/imu_", self.autonomous_mode, 10)
+        self.create_subscription(Imu, "/sensors/imu_68", self.imu_callback, 10)
+        self.create_subscription(Imu, "/sensors/imu_69", self.imu_callback, 10)
+        self.create_subscription(
+            LaserScan,
+            "/sensors/depth_scan",
+            self.depth_scan_callback,
+            10,
+        )
 
         # Publishers
         self.shutdown_pub = self.create_publisher(String, "/rover/system_shutdown",10)
@@ -83,8 +94,6 @@ class MainLogicNode(Node):
         self.get_logger().info("Initializing of tibro-roverPi is completed")
 
     def destroy_node(self):
-        for device in self.devices.values():
-            device.close()
         super().destroy_node()
 
     def wheel_calibration(self):
@@ -110,6 +119,24 @@ class MainLogicNode(Node):
             self.get_logger().warn("Rover not armed. Remember to 'arm' first.")
             return False
         return True
+
+    def imu_callback(self, msg):
+        self.latest_imu[msg.header.frame_id] = msg
+
+    def depth_scan_callback(self, msg):
+        self.latest_depth_scan = msg
+
+        center_ranges = []
+        angle = msg.angle_min
+        for distance in msg.ranges:
+            if abs(angle) <= 0.17 and distance >= msg.range_min and distance <= msg.range_max:
+                center_ranges.append(distance)
+            angle += msg.angle_increment
+
+        if not center_ranges:
+            return
+
+        self.latest_center_depth = min(center_ranges)
 
 
     ### Callback functions for mainMode topics ###
