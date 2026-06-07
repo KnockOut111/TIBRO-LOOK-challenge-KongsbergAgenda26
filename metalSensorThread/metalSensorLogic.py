@@ -52,13 +52,15 @@ class MetalSensorNode(Node):
 		self.devices = {}
 		self.topic_publishers = {}
 
-		self._last_metal_state = {}
+		self._any_pin_high = False
+		self._last_detect_publish_s = 0.0
+		self.declare_parameter("detect_cooldown_s", 0.2)
+		self._detect_cooldown_s = float(self.get_parameter("detect_cooldown_s").value)
 
 		for pin in pins:
 			self.devices[pin] = DigitalInputDevice(pin, pull_up=pull_up)
 			topic_name = f"metal_sensor/gpio{pin}"
 			self.topic_publishers[pin] = self.create_publisher(Bool, topic_name, 10)
-			self._last_metal_state[pin] = False
 
 		timer_period = 1.0 / publish_rate_hz if publish_rate_hz > 0 else 0.1
 		self.timer = self.create_timer(timer_period, self.publish_states)
@@ -66,18 +68,27 @@ class MetalSensorNode(Node):
 		self.get_logger().info(f"Monitoring GPIO pins {pins} at {publish_rate_hz:.1f} Hz with pull_up={pull_up}")
 
 	def publish_states(self):
+		any_high = False
 		for pin, device in self.devices.items():
 			msg = Bool()
 			msg.data = bool(device.value)
 			self.topic_publishers[pin].publish(msg)
+			if msg.data:
+				any_high = True
 
-			# only send msg once per detection
-			if msg.data and not self._last_metal_state[pin]:
-				msg_send = String()
-				msg_send.data = "metal_detected"
-				self.metaldetectState_pub.publish(msg_send)
 
-			self._last_metal_state[pin] = msg.data
+		now_s = self.get_clock().now().nanoseconds / 1e9
+		if (
+			any_high
+			and not self._any_pin_high
+			and (now_s - self._last_detect_publish_s) >= self._detect_cooldown_s
+		):
+			msg_send = String()
+			msg_send.data = "metal_detected"
+			self.metaldetectState_pub.publish(msg_send)
+			self._last_detect_publish_s = now_s
+
+		self._any_pin_high = any_high
 
 	def destroy_node(self):
 		for device in self.devices.values():
