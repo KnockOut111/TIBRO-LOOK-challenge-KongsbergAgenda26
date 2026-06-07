@@ -9,12 +9,12 @@ from rclpy.executors import ExternalShutdownException
 
 from locomotionController import LocomotionController, LocomotionModes, SteeringServos, MetelDetectionController
 
+#0x68 - imu1
+#0x69 - imu2
 
-# Fix locomotion modes to work as it should, wheels are never set back to 90 degrees after turning, and point turn and crab steering are not implemented propperly.
+# point turn need adjustments and crab steering are not implemented propperly.
 # Front Right wheel is still not working as intended. Need to find solution.
-# Need to make a function for calibrating the servos, maybe as an itialization step in the beginning of the program, to ensure that 90 degrees is actually straight for all wheels.
-    ## Fix init servos steering func in locomotion controller and call it in the init of the main logic node.
-    ## Test and start implementing init for cameras and IMU as well
+## Test and start implementing init for cameras and IMU as well
 
 ## Continue with steering servo initialization and calibration, and then implement the different locomotion modes propperly.
 ## Test it!!
@@ -42,6 +42,7 @@ class MainLogicNode(Node):
         self.active_timers: dict[str, Timer] = {}
 
         # Subscriptions
+        # Terminal commands - need to set msg
         self.create_subscription(String, "/rover/mainMode", self.mode_callback, 10)
         self.create_subscription(String, "/rover/locoMode", self.locomotion_callback, 10)
         self.create_subscription(String, "/rover/command", self.command_callback, 10)
@@ -59,7 +60,7 @@ class MainLogicNode(Node):
 
     
         # Publishers
-        self.shutdown_pub = self.create_publisher(String, "/rover/system_shutdown",10)
+        self.shutdown_pub = self.create_publisher(String, "/rover/system_shutdown", 10)
 
 
         self.init_roverPi()
@@ -190,18 +191,12 @@ class MainLogicNode(Node):
             self.get_logger().info("Path is clear. Moving forward.")
 
         elif sensorMsg == "metal_detected":            
-            # Alternatively make it stop and use cameras for better recognision with AI
+            ### Alternatively make it stop and use cameras for better recognision with AI
             self.metalSensorController.metal_detected(True)
-            self.get_logger().info(f"Metal detected! Number of total detections: {self.metalSensorController.numberOfTimes_MetalDetected} ") # Test
+            self.get_logger().info(f"Metal detected! Number of total detections: {self.metalSensorController.numberOfTimes_MetalDetected} ") ##########@@@@@@ Test
             #Log number of times metal is detected to file. 
         
-            #0x68 - imu1
-            #0x69 - imu2
 
-        # Implement autonomous behavior logic here, e.g.:
-        # - Use sensor data to navigate - IMU at start, turning using point turn etc.
-        # - Implement obstacle avoidance
-        # - Follow a predefined path or explore randomly
 
         if self.locomotion_mode == LocomotionModes.ACKERMANN:
             self.controller.ackermann()

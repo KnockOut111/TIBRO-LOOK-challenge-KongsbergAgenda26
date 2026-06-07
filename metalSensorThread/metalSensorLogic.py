@@ -27,8 +27,13 @@ class MetalSensorNode(Node):
 	def __init__(self):
 		super().__init__("metal_sensor_node")
 
-		#Defining a callback for the shutdown topic 
+		#Defining subscribers
 		self.create_subscription( String, "/rover/system_shutdown", self.shutdown_callback, 10)
+		self.create_subscription(String, "/rover/mainMode", self.mode_callback, 10)
+
+		# Defining publishers
+		self.metaldetectState_pub = self.create_publisher(String, "metal_sensor/metal_detected", 10)
+
 
 		self.get_logger().info("Metal sensor node started")
 
@@ -62,12 +67,14 @@ class MetalSensorNode(Node):
 	def publish_states(self):
 		for pin, device in self.devices.items():
 			msg = Bool()
+			msg_send = String()
+
 			msg.data = bool(device.value)
 			self.topic_publishers[pin].publish(msg)
 
 			if msg.data == True:
-				self.create_publisher(String, "metal_sensor/metal_detected", 10)
-	
+				self.msg_send.data = "metal_detected"
+				self.metaldetectState_pub.publish(msg_send)
 
 	def destroy_node(self):
 		for device in self.devices.values():
