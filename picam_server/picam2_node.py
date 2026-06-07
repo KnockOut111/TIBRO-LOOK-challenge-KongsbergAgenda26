@@ -68,6 +68,7 @@ class PiCam2Node(Node):
         try:
             # Capture frame
             frame = self.camera.capture_array()
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             orig_h, orig_w = frame.shape[:2]
             
             detections = []
@@ -160,8 +161,8 @@ class PiCam2Node(Node):
             detection_2d.header.stamp = detection_array.header.stamp
             
             x1, y1, x2, y2 = det["box"]
-            detection_2d.bbox.center.x = float((x1 + x2) / 2)
-            detection_2d.bbox.center.y = float((y1 + y2) / 2)
+            detection_2d.bbox.center.position.x = float((x1 + x2) / 2)
+            detection_2d.bbox.center.position.y = float((y1 + y2) / 2)
             detection_2d.bbox.size_x = float(x2 - x1)
             detection_2d.bbox.size_y = float(y2 - y1)
             
