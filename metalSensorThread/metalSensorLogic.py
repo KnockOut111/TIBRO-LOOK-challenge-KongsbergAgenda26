@@ -56,15 +56,18 @@ class MetalSensorNode(Node):
 		timer_period = 1.0 / publish_rate_hz if publish_rate_hz > 0 else 0.1
 		self.timer = self.create_timer(timer_period, self.publish_states)
 
-		self.get_logger().info(
-			f"Monitoring GPIO pins {pins} at {publish_rate_hz:.1f} Hz with pull_up={pull_up}"
-		)
+		self.get_logger().info(f"Monitoring GPIO pins {pins} at {publish_rate_hz:.1f} Hz with pull_up={pull_up}")
 
+	########@@@@@@@ Fikse mulig problem med gjentakende true for samme objekt
 	def publish_states(self):
 		for pin, device in self.devices.items():
 			msg = Bool()
 			msg.data = bool(device.value)
 			self.topic_publishers[pin].publish(msg)
+
+			if msg.data == True:
+				self.create_publisher(String, "metal_sensor/metal_detected", 10)
+	
 
 	def destroy_node(self):
 		for device in self.devices.values():

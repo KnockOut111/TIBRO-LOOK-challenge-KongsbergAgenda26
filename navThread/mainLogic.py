@@ -4,7 +4,7 @@ from typing import Callable
 from rclpy.timer import Timer
 from rclpy.node import Node
 from std_msgs.msg import String
-from sensor_msgs.msg import Imu, LaserScan
+from sensor_msgs.msg import Imu, LaserScan, Bool
 from rclpy.executors import ExternalShutdownException
 
 from locomotionController import LocomotionController, LocomotionModes, SteeringServos, MetelDetectionController
@@ -26,13 +26,16 @@ class MainLogicNode(Node):
         self.controller = LocomotionController()
         self.metalSensorController = MetelDetectionController()
         
-
         self.active = False
         self.locomotion_mode = LocomotionModes.CRABBING
         self.latest_imu = {}
         self.latest_depth_scan = None
         self.latest_center_depth = None
         self.obstacle_stop_distance = 0.8
+
+        self.gpio17_state = False
+        self.gpio22_state = False
+        self.gpio27_state = False
         
 
         # Timer setup
@@ -42,16 +45,19 @@ class MainLogicNode(Node):
         self.create_subscription(String, "/rover/mainMode", self.mode_callback, 10)
         self.create_subscription(String, "/rover/locoMode", self.locomotion_callback, 10)
         self.create_subscription(String, "/rover/command", self.command_callback, 10)
-        self.create_subscription(String, "/rover/sensorMsg", self.autonomous_mode, 10)
+        self.create_subscription(String, "/rover/sensorMsg", self.autonomous_callback, 10)
+        
         self.create_subscription(Imu, "/sensors/imu_68", self.imu_callback, 10)
         self.create_subscription(Imu, "/sensors/imu_69", self.imu_callback, 10)
-        self.create_subscription(
-            LaserScan,
-            "/sensors/depth_scan",
-            self.depth_scan_callback,
-            10,
-        )
+        
+        self.create_subscription(LaserScan, "/sensors/depth_scan", self.depth_scan_callback, 10)
 
+        self.create_subscription(Bool, "metal_sensor/gpio17", self.gpio17_callback, 10)
+        self.create_subscription(Bool, "metal_sensor/gpio22", self.gpio22_callback, 10)
+        self.create_subscription(Bool, "metal_sensor/gpio27", self.gpio27_callback, 10)
+        self.create_subscription(String, "metal_sensor/metal_detected", self.autonomous_callback, 10)
+
+    
         # Publishers
         self.shutdown_pub = self.create_publisher(String, "/rover/system_shutdown",10)
 
@@ -59,7 +65,7 @@ class MainLogicNode(Node):
         self.init_roverPi()
         self.get_logger().info("MainLogicNode is now running...")
 
-
+    #### Callback functions ####
     ### Timer management functions ###
     def start_timer(self, name: str, delay_seconds: float, callback: Callable[[], None]) -> None:
         self.cancel_timer(name)
@@ -99,29 +105,31 @@ class MainLogicNode(Node):
         self.get_logger().info("Initializing the steering servos...")
         self.controller.load_neutral_positions()
         self.controller.setting_neutral_steering_states()
-        self.get_logger().info("Finished calibrating the steering servos")
 
+        self.get_logger().info("Finished calibrating the steering servos")
+    
     def camera1_calibration(self):
         self.get_logger().info("Starting stereo camera calibraiton sequence")
-        
-
+    
     def camera2_calibration(self):
         self.get_logger().info("Starting rasPi cam module2 calibraiton sequence")
-        
-
+    
     def imu_calibration(self):
         self.get_logger().info("Starting IMU calibraiton sequence")
     
-
     def is_armed(self):
         if not self.active:
             self.get_logger().warn("Rover not armed. Remember to 'arm' first.")
             return False
         return True
 
+
+    ### Callback functions for IMU sensors ###
     def imu_callback(self, msg):
         self.latest_imu[msg.header.frame_id] = msg
 
+
+    ### Callback functions for stereo camera (D421) ###
     def depth_scan_callback(self, msg):
         self.latest_depth_scan = msg
 
@@ -136,6 +144,79 @@ class MainLogicNode(Node):
             return
 
         self.latest_center_depth = min(center_ranges)
+
+
+    ### Callback functions for metal sensor topics ###
+    def metal_sensor_callback(self, msg, pin):
+
+        if pin == 17:
+            self.gpio17_state = msg.data                
+
+        elif pin == 22:
+            self.gpio22_state = msg.data
+
+        elif pin == 27:
+            self.gpio27_state = msg.data
+
+        self.get_logger().info(
+            f"Pin {pin}: {'HIGH' if msg.data else 'LOW'}"
+        )
+
+
+
+    ### Need to set autonomous mode up with subscribers for metal_sensor data
+    ######## Main functionality - Autonomy response functions #######
+    def autonomous_callback(self, msg):
+        if not self.is_armed():
+            self.get_logger().warn("Autonomous mode did not start. The rover needs to be armed!")
+            return
+        
+        self.get_logger().info("Starting autonomous mode...")
+        
+        sensorMsg = msg.data.strip().lower()
+        self.get_logger().info(f"Received sensor data: {sensorMsg}")
+        
+        ### State machine ###
+        if sensorMsg == "obstacle_detected":
+            self.get_logger().info("Obstacle detected! Stopping rover.")
+            self.controller.stop()
+            self.start_timer("stop_delay", 1.0, self.controller.backward) 
+            
+            self.get_logger().info("Moving backward and making a stop.")
+            self.start_timer("backwards_delay", 3.0, self.controller.stop) 
+
+        elif sensorMsg == "clear_path":
+            self.controller.forward()
+            self.get_logger().info("Path is clear. Moving forward.")
+
+        elif sensorMsg == "metal_detected":            
+            # Alternatively make it stop and use cameras for better recognision with AI
+            self.metalSensorController.metal_detected(True)
+            self.get_logger().info(f"Metal detected! Number of total detections: {self.metalSensorController.numberOfTimes_MetalDetected} ") # Test
+            #Log number of times metal is detected to file. 
+        
+            #0x68 - imu1
+            #0x69 - imu2
+
+        # Implement autonomous behavior logic here, e.g.:
+        # - Use sensor data to navigate - IMU at start, turning using point turn etc.
+        # - Implement obstacle avoidance
+        # - Follow a predefined path or explore randomly
+
+        if self.locomotion_mode == LocomotionModes.ACKERMANN:
+            self.controller.ackermann()
+            self.get_logger().warn("ACKERMANN modus enabled")
+        elif self.locomotion_mode == LocomotionModes.POINT_TURN:
+            self.controller.point_turn()
+            self.get_logger().warn("POINT_TURN modus enabled")
+        elif self.locomotion_mode == LocomotionModes.CRABBING:
+            self.controller.crabbing()
+            self.get_logger().warn("CRABBING modus enabled")
+
+
+        else:
+            self.get_logger().warn(f"Unknown sensor message: {sensorMsg}")
+
 
 
     ### Callback functions for mainMode topics ###
@@ -160,6 +241,7 @@ class MainLogicNode(Node):
 
         else:
             self.get_logger().warn(f"Invalid mode: {mainMode}")
+
 
     ### Callback functions for locoMode topics ###
     def locomotion_callback(self, msg):
@@ -216,6 +298,7 @@ class MainLogicNode(Node):
 
         self.controller.set_mode(self.locomotion_mode)
         self.get_logger().info(f"Locomotion set to: {self.locomotion_mode.name}") #Test that this one logs correct and not double
+
 
     ### Callback functions for command topics ###
     def command_callback(self, msg):
@@ -329,59 +412,6 @@ class MainLogicNode(Node):
         else:
             self.get_logger().warn(f"Unknown command: {command}")
 
-
-
-
-    ### Need to set autonomous mode up with subscribers for metal_sensor data
-    ### Autonomy response functions ###
-    def autonomous_mode(self, msg):
-        if not self.is_armed():
-            self.get_logger().warn("Autonomous mode did not start. The rover needs to be armed!")
-            return
-        
-        self.get_logger().info("Starting autonomous mode...")
-        
-        sensorMsg = msg.data.strip().lower()
-        self.get_logger().info(f"Received sensor data: {sensorMsg}")
-        
-        ### State machine ###
-        if sensorMsg == "obstacle_detected":
-            self.get_logger().info("Obstacle detected! Stopping rover.")
-            self.controller.stop()
-            self.start_timer("stop_delay", 1.0, self.controller.backward) 
-            
-            self.get_logger().info("Moving backward and making a stop.")
-            self.start_timer("backwards_delay", 3.0, self.controller.stop) 
-
-        elif sensorMsg == "clear_path":
-            self.controller.forward()
-            self.get_logger().info("Path is clear. Moving forward.")
-
-        elif sensorMsg == "metal_detected":            
-            # Alternatively make it stop and use cameras for better recognision with AI
-            self.metalSensorController.metal_detected(True)
-            self.get_logger().info(f"Metal detected! Number of total detections: {self.metalSensorController.numberOfTimes_MetalDetected} ") # Test
-            #Log number of times metal is detected to file. 
-        
-            #0x68 - imu1
-            #0x69 - imu2
-
-        # Implement autonomous behavior logic here, e.g.:
-        # - Use sensor data to navigate - IMU at start, turning using point turn etc.
-        # - Implement obstacle avoidance
-        # - Follow a predefined path or explore randomly
-
-        if self.locomotion_mode == LocomotionModes.ACKERMANN:
-            self.controller.ackermann()
-            self.get_logger().warn("ACKERMANN modus enabled")
-        elif self.locomotion_mode == LocomotionModes.POINT_TURN:
-            #do something
-            self.get_logger().warn("POINT_TURN modus enabled")
-        elif self.locomotion_mode == LocomotionModes.CRABBING:
-            #do something
-            self.get_logger().warn("CRABBING modus enabled")
-        else:
-            self.get_logger().warn(f"Unknown sensor message: {sensorMsg}")
 
 def main(args=None):
     rclpy.init(args=args)
