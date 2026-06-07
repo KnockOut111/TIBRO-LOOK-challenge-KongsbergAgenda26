@@ -1,13 +1,13 @@
 import rclpy
 
 from typing import Callable
-from rclpy.timer import Timer
 from rclpy.node import Node
 from std_msgs.msg import String
 from sensor_msgs.msg import Imu, LaserScan, Bool
 from rclpy.executors import ExternalShutdownException
 
 from locomotionController import LocomotionController, LocomotionModes, SteeringServos, MetelDetectionController
+from timer import TimerManager
 
 #0x68 - imu1
 #0x69 - imu2
@@ -39,7 +39,7 @@ class MainLogicNode(Node):
         
 
         # Timer setup
-        self.active_timers: dict[str, Timer] = {}
+        self.timer_manager = TimerManager(self)
 
         # Subscriptions
         # Terminal commands - need to set msg
@@ -70,28 +70,6 @@ class MainLogicNode(Node):
 
 
 #### Callback functions ####
-
-########### Time functions ################################################################
-    ### Timer management functions ###
-    def start_timer(self, name: str, delay_seconds: float, callback: Callable[[], None]) -> None:
-        self.cancel_timer(name)
-
-        def timer_wrapper() -> None:
-            self.cancel_timer(name)
-            callback()
-
-        self.active_timers[name] = self.create_timer(delay_seconds, timer_wrapper)
-
-    def cancel_timer(self, name: str) -> None:
-        timer = self.active_timers.pop(name, None)
-        if timer is not None:
-            timer.cancel()
-
-    def cancel_all_timers(self) -> None:
-        for timer in self.active_timers.values():
-            timer.cancel()
-        self.active_timers.clear()
-
 
 ########### Main init function ################################################################
     ### Initialization and calibration functions ###
@@ -190,10 +168,10 @@ class MainLogicNode(Node):
         if sensorMsg == "obstacle_detected":
             self.get_logger().info("Obstacle detected! Stopping rover.")
             self.controller.stop()
-            self.start_timer("stop_delay", 1.0, self.controller.backward) 
+            self.timer_manager.start_timer("stop_delay", 1.0, self.controller.backward) 
             
             self.get_logger().info("Moving backward and making a stop.")
-            self.start_timer("backwards_delay", 3.0, self.controller.stop) 
+            self.timer_manager.start_timer("backwards_delay", 3.0, self.controller.stop) 
 
         elif sensorMsg == "clear_path":
             self.controller.forward()
@@ -226,7 +204,7 @@ class MainLogicNode(Node):
             shutdown_msg.data = "shutdown"
             self.shutdown_pub.publish(shutdown_msg)
 
-            self.cancel_all_timers()
+            self.timer_manager.cancel_all_timers()
             rclpy.shutdown()
 
         else:
@@ -405,7 +383,7 @@ def main(args=None):
         pass
 
     finally:
-        mainLogic_node.cancel_all_timers()
+        mainLogic_node.timer_manager.cancel_all_timers()
         mainLogic_node.controller.stop()
 
         if rclpy.ok():

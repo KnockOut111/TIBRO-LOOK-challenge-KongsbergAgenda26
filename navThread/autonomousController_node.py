@@ -46,7 +46,7 @@ class AutonomousController(Node):
         # Taking in IMU data - when in plannar state again, continue
         self.set_command("stop")
 
-        
+
 
 
 
@@ -94,6 +94,10 @@ class AutonomousController(Node):
         self.loco_mode_msg_pub.publish(self.loco_mode_msg)
 
     def set_command(self, cmd):
+        self.command_msg.data = cmd
+        self.command_msg_pub.publish(self.command_msg)
+
+    def set_timer(self, cmd):
         self.command_msg.data = cmd
         self.command_msg_pub.publish(self.command_msg)
 
