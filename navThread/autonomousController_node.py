@@ -11,8 +11,12 @@ class AutonomousController(Node):
     def __init__(self):
         super().__init__("autonomous_controller_node")
 
-    # Subscriptions
-    self.create_subscription(String, "/rover/sensorMsg", self.autonomous_mode, 10)
+        #Defining a callback for the shutdown topic 
+	    self.create_subscription(String, "/rover/system_shutdown", self.shutdown_callback, 10)
+
+        # Subscriptions
+        self.create_subscription(String, "/autonomousController_node/start_autonomous_program", self.starting_procedure, 10)
+
 
     def starting_procedure():
         print("Starting up rover and driving off ramp...")
@@ -33,19 +37,29 @@ class AutonomousController(Node):
         # Now continuing on the new path, until new object is 'detected' again or 
         # innside the given limit of radius to possible obstacle.
 
+    def destroy_node(self):
+        super().destroy_node()
+    
+    def shutdown_callback(self, msg):
+        if msg.data.strip().lower() == "shutdown":
+            self.get_logger().info("Shutdown signal received. Shutting down metal sensor node...")
+            rclpy.shutdown()
+
 def main(args=None):
     rclpy.init(args=args)
-    mainLogic_node = MainLogicNode()
+    node = AutonomousController()
     
     try:
-        rclpy.spin(mainLogic_node)
+	    rclpy.spin(node)
     
     except ExternalShutdownException:
         pass
+    
+    except KeyboardInterrupt:
+        pass
 
     finally:
-        mainLogic_node.cancel_all_timers()
-        mainLogic_node.controller.stop()
-
+        node.destroy_node()
+		
         if rclpy.ok():
             rclpy.shutdown()
