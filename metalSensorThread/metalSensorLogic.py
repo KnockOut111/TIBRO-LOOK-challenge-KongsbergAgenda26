@@ -52,28 +52,32 @@ class MetalSensorNode(Node):
 		self.devices = {}
 		self.topic_publishers = {}
 
+		self._last_metal_state = {}
+
 		for pin in pins:
 			self.devices[pin] = DigitalInputDevice(pin, pull_up=pull_up)
 			topic_name = f"metal_sensor/gpio{pin}"
 			self.topic_publishers[pin] = self.create_publisher(Bool, topic_name, 10)
+			self._last_metal_state[pin] = False
 
 		timer_period = 1.0 / publish_rate_hz if publish_rate_hz > 0 else 0.1
 		self.timer = self.create_timer(timer_period, self.publish_states)
 
 		self.get_logger().info(f"Monitoring GPIO pins {pins} at {publish_rate_hz:.1f} Hz with pull_up={pull_up}")
 
-	########@@@@@@@ Fikse mulig problem med gjentakende true for samme objekt
 	def publish_states(self):
 		for pin, device in self.devices.items():
 			msg = Bool()
-			msg_send = String()
-
 			msg.data = bool(device.value)
 			self.topic_publishers[pin].publish(msg)
 
-			if msg.data == True:
-				self.msg_send.data = "metal_detected"
+			# only send msg once per detection
+			if msg.data and not self._last_metal_state[pin]:
+				msg_send = String()
+				msg_send.data = "metal_detected"
 				self.metaldetectState_pub.publish(msg_send)
+
+			self._last_metal_state[pin] = msg.data
 
 	def destroy_node(self):
 		for device in self.devices.values():
