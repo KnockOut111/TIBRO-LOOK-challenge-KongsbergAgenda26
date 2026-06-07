@@ -113,19 +113,18 @@ imu-sensor-logs:
 
 # Depth camera docker targets
 depth-camera-build:
-	docker compose -f docker-compose.yml up -d --build depth_camera_thread
-	docker compose -f docker-compose.yml logs -f depth_camera_thread
+	docker compose -f docker-compose.yml up -d --build realsense_camera_thread depth_camera_thread
+	docker compose -f docker-compose.yml logs -f realsense_camera_thread depth_camera_thread
 
 depth-camera-restart:
-	docker compose -f docker-compose.yml restart depth_camera_thread
+	docker compose -f docker-compose.yml restart realsense_camera_thread depth_camera_thread
 
 depth-camera-stop:
-	docker compose -f docker-compose.yml stop depth_camera_thread
+	docker compose -f docker-compose.yml stop realsense_camera_thread depth_camera_thread
 
 depth-camera-clean:
-	docker compose stop depth_camera_thread
-	docker compose rm -f depth_camera_thread
-	docker rmi depth_camera_thread
+	docker compose stop realsense_camera_thread depth_camera_thread
+	docker compose rm -f realsense_camera_thread depth_camera_thread
 
 depth-camera-logs:
-	docker compose -f docker-compose.yml logs -f depth_camera_thread
+	docker compose -f docker-compose.yml logs -f realsense_camera_thread depth_camera_thread
