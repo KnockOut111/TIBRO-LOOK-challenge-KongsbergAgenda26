@@ -1,12 +1,12 @@
 import rclpy
 
 from typing import Callable
-from rclpy.timer import Timer
 from rclpy.node import Node
 from std_msgs.msg import String
 from rclpy.executors import ExternalShutdownException
 
 from locomotionController import LocomotionController
+from timer import TimerManager
 
 # Implement autonomous behavior logic here, e.g.:
         # - Use sensor data to navigate - IMU at start, turning using point turn etc.
@@ -19,6 +19,7 @@ class AutonomousController(Node):
         super().__init__("autonomous_controller_node")
 
         self.controller = LocomotionController()
+        self.timer_manager = self.TimerManager(self)
 
         # Subscriptions
         self.create_subscription(String, "/autonomousController_node/start_autonomous_program", self.starting_state, 10)
@@ -37,6 +38,7 @@ class AutonomousController(Node):
         self.command_msg = String()
 
 
+
     def starting_state(self):
         self.get_logger().info("Starting up rover and driving off ramp...")
         
@@ -46,10 +48,6 @@ class AutonomousController(Node):
         # Taking in IMU data - when in plannar state again, continue
         self.set_command("stop")
 
-
-
-
-
         # Drive off ramp until IMU shows planer surfaces again. 0 at beginning, 
         # then tilt some degrees (going off ramp), 0 again when off ramp + some deviation in level hight.
         # As the ramp is higher up than the main area of traversal. 
@@ -58,7 +56,7 @@ class AutonomousController(Node):
         self.get_logger().info("Starting scanning the area by turning 360 degrees. ")
         
         self.set_loco_mode("point_turn")
-        self.set_command("")
+        self.TimerManager.start_timer("stop_delay", 1.0, self.set_command("right_turn 360"))
 
 
 
@@ -94,10 +92,6 @@ class AutonomousController(Node):
         self.loco_mode_msg_pub.publish(self.loco_mode_msg)
 
     def set_command(self, cmd):
-        self.command_msg.data = cmd
-        self.command_msg_pub.publish(self.command_msg)
-
-    def set_timer(self, cmd):
         self.command_msg.data = cmd
         self.command_msg_pub.publish(self.command_msg)
 

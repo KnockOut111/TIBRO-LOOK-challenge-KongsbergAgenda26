@@ -137,9 +137,11 @@ class LocomotionController():
 
     def right_turn(self):
         self.wheelState_crabbing = False
+        self.right_turn_ack = True
 
     def left_turn(self):
         self.wheelState_crabbing = False
+        self.left_turn_ack = True
 
 
 
@@ -173,6 +175,8 @@ class LocomotionController():
 
         for wheel, angle in target_angles.items():
             self.set_wheel_steering(wheel, angle)
+
+        if self.locomo
 
         #Motion: Fix so that only rear and front wheels turn in opposite direction, the middle ones must be still.
 

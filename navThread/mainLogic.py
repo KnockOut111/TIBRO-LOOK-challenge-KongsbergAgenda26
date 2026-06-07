@@ -25,7 +25,7 @@ class MainLogicNode(Node):
         
         self.controller = LocomotionController()
         self.metalSensorController = MetelDetectionController()
-        
+
         self.active = False
         self.locomotion_mode = LocomotionModes.CRABBING
         self.latest_imu = {}
@@ -59,7 +59,6 @@ class MainLogicNode(Node):
         self.create_subscription(Bool, "metal_sensor/gpio27", self.gpio27_callback, 10)
         self.create_subscription(String, "metal_sensor/metal_detected", self.autonomous_callback, 10)
 
-    
         # Publishers
         self.shutdown_pub = self.create_publisher(String, "/rover/system_shutdown", 10)
 
@@ -314,18 +313,18 @@ class MainLogicNode(Node):
             self.get_logger().info("Turning left " + str(turn_angle) + " degrees. ")
 
         elif cmd == "right_turn":  
-            if len(parts) != 2:
-                self.get_logger().warn("Input type required: right_turn 45")
+            if len(parts) != 1:
+                self.get_logger().warn("Input type required: right_turn")
                 return
 
-            try:
-                turn_angle = int(parts[1])
-            except ValueError:
-                self.get_logger().warn(f"Invalid angle: {parts[1]}")
-                return
-            except IndexError:
-                self.get_logger().warn("Turn angle required for right_turn")
-                return
+            # try:
+            #     turn_angle = int(parts[1])
+            # except ValueError:
+            #     self.get_logger().warn(f"Invalid angle: {parts[1]}")
+            #     return
+            # except IndexError:
+            #     self.get_logger().warn("Turn angle required for right_turn")
+            #     return
 
             # Example angle, adjust as needed
             self.controller.right_turn()

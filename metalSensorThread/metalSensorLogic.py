@@ -29,7 +29,6 @@ class MetalSensorNode(Node):
 
 		#Defining subscribers
 		self.create_subscription( String, "/rover/system_shutdown", self.shutdown_callback, 10)
-		self.create_subscription(String, "/rover/mainMode", self.mode_callback, 10)
 
 		# Defining publishers
 		self.metaldetectState_pub = self.create_publisher(String, "metal_sensor/metal_detected", 10)

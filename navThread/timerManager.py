@@ -1,4 +1,7 @@
-from typing import Callable 
+from typing import Callable
+from rclpy.node import Node
+from rclpy.timer import Timer as RosTimer
+
 
 class TimerManager:
     def __init__(self, node: Node):
@@ -18,7 +21,7 @@ class TimerManager:
             self.cancel_timer(name)
             callback()
 
-        self.active_timers[name] = self.create_timer(
+        self.active_timers[name] = self.node.create_timer(
             delay_seconds,
             timer_wrapper
         )
