@@ -79,7 +79,7 @@ services:
     devices:
       - /dev/bus/usb:/dev/bus/usb
     volumes:
-      - ./mappingThread-Remote/stereocamera:/app
+      - ./mappingThread-Local/stereocamera:/app
     working_dir: /app
     environment:
       - PYTHONUNBUFFERED=1
