@@ -56,7 +56,7 @@ class AutonomousController(Node):
         self.get_logger().info("Starting scanning the area by turning 360 degrees. ")
         
         self.set_loco_mode("point_turn")
-        self.TimerManager.start_timer("stop_delay", 1.0, self.set_command("right_turn 360"))
+        self.TimerManager.start_timer("stop_delay", 1.0, self.set_command("right_turn"))
 
 
 

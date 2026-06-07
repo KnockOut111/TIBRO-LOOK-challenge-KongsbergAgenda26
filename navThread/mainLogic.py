@@ -2,8 +2,8 @@ import rclpy
 
 from typing import Callable
 from rclpy.node import Node
-from std_msgs.msg import String
-from sensor_msgs.msg import Imu, LaserScan, Bool
+from std_msgs.msg import String, Bool
+from sensor_msgs.msg import Imu, LaserScan
 from rclpy.executors import ExternalShutdownException
 
 from locomotionController import LocomotionController, LocomotionModes, SteeringServos, MetelDetectionController
@@ -295,18 +295,18 @@ class MainLogicNode(Node):
             self.get_logger().info("Stopping rover")
 
         elif cmd == "left_turn": 
-            if len(parts) != 2:
-                self.get_logger().warn("Input type required: left_turn 45")
+            if len(parts) != 1:
+                self.get_logger().warn("Input type required: left_turn")
                 return
 
-            try:
-                turn_angle = int(parts[1])
-            except ValueError:
-                self.get_logger().warn(f"Invalid angle: {parts[1]}")
-                return
-            except IndexError:
-                self.get_logger().warn("Turn angle required for left_turn")
-                return
+            # try:
+            #     turn_angle = int(parts[1])
+            # except ValueError:
+            #     self.get_logger().warn(f"Invalid angle: {parts[1]}")
+            #     return
+            # except IndexError:
+            #     self.get_logger().warn("Turn angle required for left_turn")
+            #     return
             
             # Need to fix stearing for different modes.
             self.controller.left_turn()
