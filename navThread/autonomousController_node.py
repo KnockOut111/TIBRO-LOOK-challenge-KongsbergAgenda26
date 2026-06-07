@@ -6,6 +6,8 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from rclpy.executors import ExternalShutdownException
 
+from locomotionController import LocomotionController
+
 # Implement autonomous behavior logic here, e.g.:
         # - Use sensor data to navigate - IMU at start, turning using point turn etc.
         # - Implement obstacle avoidance
@@ -15,6 +17,8 @@ from rclpy.executors import ExternalShutdownException
 class AutonomousController(Node):
     def __init__(self):
         super().__init__("autonomous_controller_node")
+
+        self.controller = LocomotionController()
 
         # Subscriptions
         self.create_subscription(String, "/autonomousController_node/start_autonomous_program", self.starting_state, 10)
@@ -27,14 +31,22 @@ class AutonomousController(Node):
         self.mainState_msg = String()
 
         self.loco_mode_msg_pub = self.create_publisher(String, "/rover/locoMode", 10)
+        self.mainState_msg = String()
 
-    
+        self.command_msg_pub = self.create_publisher(String, "/rover/command", 10)
+        self.command_msg = String()
 
 
     def starting_state(self):
         self.get_logger().info("Starting up rover and driving off ramp...")
         
         self.arm_rover()
+        self.set_loco_mode("crabbing") # Is set to this by default so maybe obsolete?
+        self.set_command("forward")
+        # Taking in IMU data - when in plannar state again, continue
+        self.set_command("stop")
+
+        
 
 
 
@@ -44,16 +56,24 @@ class AutonomousController(Node):
 
     def scanning_state(self):
         self.get_logger().info("Starting scanning the area by turning 360 degrees. ")
-        mainState_msg = String()
-        self.mainState_msg.data = "arm"
-        self.mainState_pub.publish(mainState_msg)
+        
+        self.set_loco_mode("point_turn")
+        self.set_command("")
+
 
 
         # Scan the area by turning 360 degrees in point_turn mode, as long as no obsticles are detected. 
         # Simultaneously as stereo camera is taking in the suroundings. 
 
-    def main_loop(self):
-        self.get_logger().info("Entering the main logic of the rover driving. ")
+
+    def obsticle_detected(self):
+        self.get_logger().info("Obsticle detected! ")
+
+    def driving_and_mapping(self):
+        self.get_logger().info("Entering main logic for driving and mapping. ")
+        self.set_command("forward")
+
+
         # Drive forward, untill object detected inside a given distance.
         # Then stop, move backwards for 2s? then move random? left or right.
         # Now continuing on the new path, until new object is 'detected' again or 
@@ -61,10 +81,10 @@ class AutonomousController(Node):
 
     def idle(self):
         self.get_logger().info("The rover is in idle state. ")
+        self.set_command("stop")
 
 
-
-
+#### Helper functions ####
     def arm_rover(self):
         self.mainState_msg.data = "arm"
         self.mainState_pub.publish(self.mainState_msg)
@@ -73,6 +93,12 @@ class AutonomousController(Node):
         self.loco_mode_msg.data = msg
         self.loco_mode_msg_pub.publish(self.loco_mode_msg)
 
+    def set_command(self, cmd):
+        self.command_msg.data = cmd
+        self.command_msg_pub.publish(self.command_msg)
+
+
+#### Shutdown clean functions ####
     def destroy_node(self):
         super().destroy_node()
     

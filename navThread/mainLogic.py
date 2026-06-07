@@ -48,6 +48,7 @@ class MainLogicNode(Node):
         self.create_subscription(String, "/rover/command", self.command_callback, 10)
         self.create_subscription(String, "/rover/sensorMsg", self.autonomous_callback, 10)
         
+        # Other commands - do not need to set msg?
         self.create_subscription(Imu, "/sensors/imu_68", self.imu_callback, 10)
         self.create_subscription(Imu, "/sensors/imu_69", self.imu_callback, 10)
         
@@ -66,7 +67,11 @@ class MainLogicNode(Node):
         self.init_roverPi()
         self.get_logger().info("MainLogicNode is now running...")
 
-    #### Callback functions ####
+
+
+#### Callback functions ####
+
+########### Time functions ################################################################
     ### Timer management functions ###
     def start_timer(self, name: str, delay_seconds: float, callback: Callable[[], None]) -> None:
         self.cancel_timer(name)
@@ -88,6 +93,7 @@ class MainLogicNode(Node):
         self.active_timers.clear()
 
 
+########### Main init function ################################################################
     ### Initialization and calibration functions ###
     def init_roverPi(self):
         self.get_logger().info("Initializing roverPi system...")
@@ -99,9 +105,8 @@ class MainLogicNode(Node):
         self.imu_calibration()
         self.get_logger().info("Initializing of tibro-roverPi is completed")
 
-    def destroy_node(self):
-        super().destroy_node()
 
+########### Calibration functions ################################################################
     def wheel_calibration(self):
         self.get_logger().info("Initializing the steering servos...")
         self.controller.load_neutral_positions()
@@ -117,14 +122,20 @@ class MainLogicNode(Node):
     
     def imu_calibration(self):
         self.get_logger().info("Starting IMU calibraiton sequence")
-    
+
+
+########### Helper functions ################################################################
     def is_armed(self):
         if not self.active:
             self.get_logger().warn("Rover not armed. Remember to 'arm' first.")
             return False
         return True
+    
+    def destroy_node(self):
+        super().destroy_node()
 
 
+################ Sensor callback ###########################################################
     ### Callback functions for IMU sensors ###
     def imu_callback(self, msg):
         self.latest_imu[msg.header.frame_id] = msg
@@ -163,9 +174,7 @@ class MainLogicNode(Node):
             f"Pin {pin}: {'HIGH' if msg.data else 'LOW'}"
         )
 
-
-
-    ### Need to set autonomous mode up with subscribers for metal_sensor data
+############### Autonomous logic callback (obstacle_detected, clear_path, metal_detected) ############################################################
     ######## Main functionality - Autonomy response functions #######
     def autonomous_callback(self, msg):
         if not self.is_armed():
@@ -195,25 +204,11 @@ class MainLogicNode(Node):
             self.metalSensorController.metal_detected(True)
             self.get_logger().info(f"Metal detected! Number of total detections: {self.metalSensorController.numberOfTimes_MetalDetected} ") ##########@@@@@@ Test
             #Log number of times metal is detected to file. 
-        
-
-
-        if self.locomotion_mode == LocomotionModes.ACKERMANN:
-            self.controller.ackermann()
-            self.get_logger().warn("ACKERMANN modus enabled")
-        elif self.locomotion_mode == LocomotionModes.POINT_TURN:
-            self.controller.point_turn()
-            self.get_logger().warn("POINT_TURN modus enabled")
-        elif self.locomotion_mode == LocomotionModes.CRABBING:
-            self.controller.crabbing()
-            self.get_logger().warn("CRABBING modus enabled")
-
 
         else:
             self.get_logger().warn(f"Unknown sensor message: {sensorMsg}")
 
-
-
+############## Main modes (arm and quit) #############################################################
     ### Callback functions for mainMode topics ###
     def mode_callback(self, msg):
         mainMode = msg.data.strip().lower()
@@ -237,8 +232,7 @@ class MainLogicNode(Node):
         else:
             self.get_logger().warn(f"Invalid mode: {mainMode}")
 
-
-    ### Callback functions for locoMode topics ###
+############## LocoMode topics (ackermann, point_turn, crabbing) #############################################################
     def locomotion_callback(self, msg):
         if not self.is_armed():
             self.get_logger().warn("Locomotion not set. Rover need to be armed! ")
@@ -295,7 +289,7 @@ class MainLogicNode(Node):
         self.get_logger().info(f"Locomotion set to: {self.locomotion_mode.name}") #Test that this one logs correct and not double
 
 
-    ### Callback functions for command topics ###
+############## Command topics (forward, backward, stop, forward_turn, backward_turn, left_turn, right_turn, reset_steering, set_wheel_steering, update_steering) #############################################################
     def command_callback(self, msg):
         if not self.is_armed():
             self.get_logger().warn("Ignoring command! The rover is not armed.")
@@ -322,16 +316,6 @@ class MainLogicNode(Node):
         elif cmd == "stop":
             self.controller.stop()
             self.get_logger().info("Stopping rover")
-
-        elif cmd == "forward_turn":
-            self.controller.forward_turn()
-            self.get_logger().info("Setting forward motion")
-
-        elif cmd == "backward_turn":
-            self.controller.backward_turn()
-            self.get_logger().info("Setting backward motion")
-
-        
 
         elif cmd == "left_turn": 
             if len(parts) != 2:
@@ -368,6 +352,8 @@ class MainLogicNode(Node):
             # Example angle, adjust as needed
             self.controller.right_turn()
             self.get_logger().info("Turning right " + str(turn_angle) + " degrees. ")
+
+
 
         # Setts all wheels to degrees given in steering_neatural 
         elif cmd == "reset_steering": 

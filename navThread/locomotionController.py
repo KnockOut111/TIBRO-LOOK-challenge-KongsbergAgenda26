@@ -128,9 +128,11 @@ class LocomotionController():
         self.set_drive(self.STOP, self.STOP)
 
     def forward(self):
+        self.wheelState_crabbing = True
         self.set_drive(self.LEFT_FORWARD, self.RIGHT_FORWARD)
 
     def backward(self):
+        self.wheelState_crabbing = True
         self.set_drive(self.LEFT_BACKWARD, self.RIGHT_BACKWARD)
 
     def right_turn(self):
@@ -138,12 +140,6 @@ class LocomotionController():
 
     def left_turn(self):
         self.wheelState_crabbing = False
-
-    def forward_turn(self):
-        self.wheelState_crabbing = True
-
-    def backward_turn(self):
-        self.wheelState_crabbing = True
 
 
 
