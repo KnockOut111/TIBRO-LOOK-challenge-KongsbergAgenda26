@@ -11,7 +11,7 @@ class DepthObstacleNode(Node):
         super().__init__("depth_obstacle_node")
 
         self.declare_parameter("depth_topic", "/camera/camera/depth/image_rect_raw")
-        self.declare_parameter("obstacle_topic", "/rover/sensorMsg")
+        self.declare_parameter("obstacle_topic", "/sensors/obstacle_state")
         self.declare_parameter("stop_distance_m", 0.8)
         self.declare_parameter("clear_distance_m", 1.0)
         self.declare_parameter("sample_radius_px", 10)

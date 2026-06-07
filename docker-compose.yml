@@ -20,6 +20,21 @@ services:
       - BLINKA_FORCECHIP=BCM2XXX    
     command: python3 -u mainLogic.py  # Decides what is to run on startup, otherwise it will just run the default command which is to start a bash terminal
 
+ 
+  autonomous_controller_thread:
+    build:
+      context: .
+      dockerfile: navThread/Dockerfile
+    container_name: roverpi-autonomous_controller_thread
+    network_mode: host
+    volumes:
+      - ./navThread:/app
+    working_dir: /app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+    command: python3 -u autonomousController_node.py
+
   metal_sensor_thread:
     build:
       context: .
