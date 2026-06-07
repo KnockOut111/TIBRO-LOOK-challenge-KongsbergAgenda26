@@ -3,693 +3,492 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PiCam Detect</title>
+  <title>TIBRO LOOK · Live Detection</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0d0d0d;
-      --panel: #141414;
-      --border: #2a2a2a;
-      --accent: #e8ff00;
-      --accent2: #ff4400;
-      --accent3: #00e5ff;
-      --text: #c8c8c8;
-      --dim: #555;
-      --mono: 'Share Tech Mono', monospace;
-      --display: 'Bebas Neue', sans-serif;
+      --bg-0: #07090d;
+      --bg-1: #0d1117;
+      --bg-2: #151b24;
+      --border: #1f2632;
+      --border-strong: #2c3543;
+      --text: #d6dbe3;
+      --text-dim: #6b7589;
+      --text-faint: #3d4554;
+      --accent: #62d4ff;
+      --accent-soft: rgba(98, 212, 255, 0.12);
+      --good: #5dd39e;
+      --warn: #f3a953;
+      --bad: #f06e6e;
+      --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+      --display: 'Space Grotesk', system-ui, sans-serif;
     }
 
+    html, body { height: 100%; }
+
     body {
-      background: var(--bg);
+      background:
+        radial-gradient(1200px 800px at 80% -10%, rgba(98, 212, 255, 0.06), transparent 60%),
+        radial-gradient(1000px 700px at -10% 110%, rgba(243, 169, 83, 0.04), transparent 60%),
+        var(--bg-0);
       color: var(--text);
       font-family: var(--mono);
       min-height: 100vh;
       display: grid;
       grid-template-rows: auto 1fr auto;
-      overflow-x: hidden;
+      overflow: hidden;
     }
 
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
-      pointer-events: none;
-      z-index: 999;
-    }
-
+    /* ── Header ── */
     header {
+      padding: 1rem 1.75rem;
       border-bottom: 1px solid var(--border);
-      padding: 1.2rem 2rem;
       display: flex;
       align-items: center;
       gap: 1.5rem;
+      background: rgba(13, 17, 23, 0.6);
+      backdrop-filter: blur(8px);
     }
 
-    .logo { font-family: var(--display); font-size: 2.4rem; letter-spacing: 0.08em; color: #fff; line-height: 1; }
-    .logo span { color: var(--accent3); }
-    .logo em { color: var(--accent); font-style: normal; }
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      font-family: var(--display);
+    }
 
-    .status-bar {
+    .brand .mark {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+    }
+
+    .brand .name {
+      font-size: 1.1rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      color: var(--text);
+    }
+
+    .brand .sub {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .header-meta {
       margin-left: auto;
       display: flex;
+      align-items: center;
       gap: 1.5rem;
-      align-items: center;
-      font-size: 0.7rem;
-      color: var(--dim);
-      letter-spacing: 0.1em;
-    }
-
-    .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--accent3);
-      box-shadow: 0 0 6px var(--accent3);
-      animation: pulse 2s ease-in-out infinite;
-    }
-    .dot.warn { background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
-
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-    main {
-      display: grid;
-      grid-template-columns: 300px 1fr;
-      height: calc(100vh - 70px - 36px);
-    }
-
-    /* ── LEFT PANEL ── */
-    .controls {
-      border-right: 1px solid var(--border);
-      padding: 2rem 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-      overflow: hidden;
-    }
-
-    .section-label {
-      font-size: 0.65rem;
-      letter-spacing: 0.2em;
-      color: var(--dim);
-      text-transform: uppercase;
-      margin-bottom: 0.8rem;
-      padding-bottom: 0.4rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    #captureBtn {
-      width: 100%;
-      background: transparent;
-      border: 2px solid var(--accent);
-      color: var(--accent);
-      font-family: var(--display);
-      font-size: 1.8rem;
-      letter-spacing: 0.15em;
-      padding: 1rem 0;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      transition: color 0.15s;
-    }
-
-    #captureBtn::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--accent);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 0.2s ease;
-    }
-
-    #captureBtn:hover::before { transform: scaleX(1); }
-    #captureBtn:hover { color: #000; }
-    #captureBtn:active { transform: scale(0.98); }
-    #captureBtn span { position: relative; z-index: 1; }
-
-    #captureBtn.loading {
-      pointer-events: none;
-      border-color: var(--dim);
-      color: var(--dim);
-    }
-    #captureBtn.loading::before { transform: scaleX(0) !important; }
-
-    /* Progress bar for loading state */
-    .progress-bar {
-      height: 3px;
-      background: var(--border);
-      position: relative;
-      overflow: hidden;
-      display: none;
-    }
-    .progress-bar.active { display: block; }
-    .progress-bar::after {
-      content: '';
-      position: absolute;
-      left: -40%;
-      width: 40%;
-      height: 100%;
-      background: var(--accent3);
-      animation: scan 1.2s linear infinite;
-    }
-    @keyframes scan { to { left: 140%; } }
-
-    /* Model status badge */
-    .model-badge {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      font-size: 0.7rem;
-      padding: 0.6rem 0.8rem;
-      border: 1px solid var(--border);
-      color: var(--dim);
-    }
-    .model-badge.ok { border-color: #1a3a1a; color: #7dff7d; }
-    .model-badge.err { border-color: #3a1a1a; color: var(--accent2); }
-
-    /* Detection list */
-    .detections {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .det-list {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .det-item {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      padding: 0.4rem 0.6rem;
-      border: 1px solid var(--border);
       font-size: 0.72rem;
-      animation: fadeIn 0.25s ease;
+      letter-spacing: 0.14em;
+      color: var(--text-dim);
+      text-transform: uppercase;
     }
 
-    .det-color { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
-    .det-label { flex: 1; color: #fff; }
-    .det-conf { color: var(--accent); }
-
-    .det-empty { color: var(--dim); font-size: 0.72rem; padding: 0.5rem 0; }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; } }
-
-    /* Counter row */
-    .counters {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .counter {
-      text-align: center;
-      padding: 0.7rem;
-      border: 1px solid var(--border);
-    }
-
-    .counter-num { font-family: var(--display); font-size: 2rem; color: #fff; line-height: 1; }
-    .counter-label { font-size: 0.6rem; color: var(--dim); letter-spacing: 0.12em; }
-
-    /* Log */
-    .log-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-    .log { flex: 1; overflow-y: auto; font-size: 0.68rem; line-height: 1.8; }
-    .log-entry { padding: 0.1rem 0; border-bottom: 1px solid #1a1a1a; color: var(--dim); }
-    .log-entry.ok { color: #7dff7d; }
-    .log-entry.err { color: var(--accent2); }
-    .log-entry.info { color: var(--accent3); }
-
-    /* ── RIGHT PANEL ── */
-    .viewer { display: flex; flex-direction: column; overflow: hidden; }
-
-    .viewer-header {
-      padding: 0.8rem 1.5rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
+    .status {
+      display: inline-flex;
       align-items: center;
-      gap: 1rem;
-      font-size: 0.7rem;
-      color: var(--dim);
-      letter-spacing: 0.1em;
+      gap: 0.55rem;
     }
 
-    .viewer-header .filename { margin-left: auto; color: var(--accent3); font-size: 0.72rem; }
-
-    /* Toggle raw/detected */
-    .toggle-group { display: flex; gap: 4px; }
-    .toggle-btn {
-      font-family: var(--mono);
-      font-size: 0.65rem;
-      padding: 0.3rem 0.7rem;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--dim);
-      cursor: pointer;
-      letter-spacing: 0.1em;
-      transition: all 0.15s;
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-faint);
+      box-shadow: 0 0 0 0 transparent;
+      transition: background-color 0.3s, box-shadow 0.3s;
     }
-    .toggle-btn.active { border-color: var(--accent3); color: var(--accent3); }
 
-    .photo-stage {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
+    .status-dot.live {
+      background: var(--good);
+      box-shadow: 0 0 10px rgba(93, 211, 158, 0.6);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    .status-dot.stale {
+      background: var(--warn);
+      box-shadow: 0 0 8px rgba(243, 169, 83, 0.5);
+    }
+
+    .status-dot.down {
+      background: var(--bad);
+      box-shadow: 0 0 8px rgba(240, 110, 110, 0.5);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+
+    .clock {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.08em;
+      color: var(--text);
+    }
+
+    /* ── Stage ── */
+    main {
       position: relative;
+      display: grid;
+      place-items: center;
+      padding: 2rem;
       overflow: hidden;
-      background: radial-gradient(ellipse at 50% 50%, #1a1a1a 0%, #0d0d0d 100%);
     }
 
-    .photo-stage::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(to right, #0d0d0d 0%, transparent 3%),
-        linear-gradient(to left, #0d0d0d 0%, transparent 3%),
-        linear-gradient(to bottom, #0d0d0d 0%, transparent 3%),
-        linear-gradient(to top, #0d0d0d 0%, transparent 3%);
-      pointer-events: none;
+    .frame-wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
     }
 
-    .empty-state { text-align: center; color: var(--dim); }
-    .empty-state .icon { font-size: 4rem; margin-bottom: 1rem; opacity: 0.3; }
-    .empty-state p { font-size: 0.8rem; letter-spacing: 0.15em; }
-
-    #mainPhoto {
+    .frame {
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
-      display: none;
-      border: 1px solid var(--border);
-      box-shadow: 0 0 60px rgba(0,0,0,0.8);
-      animation: reveal 0.35s ease;
+      border-radius: 6px;
+      border: 1px solid var(--border-strong);
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.6),
+        0 30px 80px rgba(0, 0, 0, 0.55),
+        0 0 60px rgba(98, 212, 255, 0.05);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      background: var(--bg-1);
     }
 
-    @keyframes reveal { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+    .frame.loaded { opacity: 1; }
 
-    /* Thumb strip */
-    .thumb-strip {
-      height: 90px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 1.5rem;
-      overflow-x: auto;
-      background: var(--panel);
+    .corner {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-color: var(--accent);
+      pointer-events: none;
+      opacity: 0.85;
     }
-    .thumb-strip::-webkit-scrollbar { height: 4px; }
-    .thumb-strip::-webkit-scrollbar-track { background: #111; }
-    .thumb-strip::-webkit-scrollbar-thumb { background: var(--border); }
+    .corner.tl { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+    .corner.tr { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
+    .corner.bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
+    .corner.br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
 
-    .thumb {
-      height: 70px;
-      width: 100px;
-      object-fit: cover;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: border-color 0.15s, transform 0.15s;
-      filter: brightness(0.7);
+    /* Empty state */
+    .empty {
+      text-align: center;
+      color: var(--text-dim);
+      font-family: var(--display);
+      letter-spacing: 0.1em;
     }
-    .thumb:hover { border-color: var(--accent3); filter: brightness(1); transform: scale(1.04); }
-    .thumb.active { border-color: var(--accent3); filter: brightness(1); }
-
-    /* Inference time badge */
-    #inferBadge {
-      font-size: 0.65rem;
-      color: var(--accent3);
-      padding: 0.2rem 0.5rem;
-      border: 1px solid #1a2a2a;
+    .empty .glyph {
+      font-family: var(--mono);
+      font-size: 3rem;
+      color: var(--text-faint);
+      margin-bottom: 1rem;
+      letter-spacing: 0.05em;
+    }
+    .empty p {
+      font-size: 0.85rem;
+      text-transform: uppercase;
     }
 
-    /* Flash */
-    .flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 998; transition: opacity 0.05s; }
-    .flash.active { opacity: 0.5; }
-
+    /* ── Footer ── */
     footer {
       border-top: 1px solid var(--border);
-      padding: 0.6rem 2rem;
-      font-size: 0.65rem;
-      color: var(--dim);
-      letter-spacing: 0.1em;
+      background: rgba(13, 17, 23, 0.6);
+      backdrop-filter: blur(8px);
+      padding: 0.9rem 1.75rem;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 1.5rem;
+      align-items: center;
+      min-height: 64px;
+    }
+
+    .meta {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      gap: 0.15rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .meta .big {
+      font-family: var(--display);
+      font-size: 1.15rem;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      text-transform: none;
+    }
+
+    .detections {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-strong) transparent;
+      padding-bottom: 2px;
+    }
+    .detections::-webkit-scrollbar { height: 4px; }
+    .detections::-webkit-scrollbar-track { background: transparent; }
+    .detections::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.7rem;
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      color: var(--text);
+      background: var(--bg-1);
+      white-space: nowrap;
+      animation: chip-in 0.25s ease;
+    }
+
+    @keyframes chip-in {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chip .swatch {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    .chip .label {
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+
+    .chip .conf {
+      color: var(--text-dim);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .chip-empty {
+      color: var(--text-faint);
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .source {
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .source strong { color: var(--accent); font-weight: 500; letter-spacing: 0.08em; }
+
+    @media (max-width: 720px) {
+      footer { grid-template-columns: 1fr; }
+      .source { text-align: left; }
+      .header-meta { gap: 0.8rem; font-size: 0.65rem; }
     }
   </style>
 </head>
 <body>
 
-<div class="flash" id="flash"></div>
-
 <header>
-  <div class="logo">Pi<span>CAM</span> <em>DETECT</em></div>
-  <div class="status-bar">
-    <div class="dot" id="statusDot"></div>
-    <span id="statusText">CHECKING MODEL...</span>
-    <span id="clock">--:--:--</span>
+  <div class="brand">
+    <span class="mark">◉</span>
+    <span class="name">TIBRO LOOK</span>
+    <span class="sub">// Live Detection Feed</span>
+  </div>
+  <div class="header-meta">
+    <span class="status">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">CONNECTING</span>
+    </span>
+    <span class="clock" id="clock">--:--:--</span>
   </div>
 </header>
 
 <main>
-  <aside class="controls">
-    <div>
-      <div class="section-label">Capture + Detect</div>
-      <button id="captureBtn" onclick="capture()">
-        <span id="btnText">⬤ SHOOT</span>
-      </button>
-      <div class="progress-bar" id="progressBar"></div>
+  <div class="frame-wrap" id="frameWrap">
+    <div class="empty" id="emptyState">
+      <div class="glyph">◌</div>
+      <p>Waiting for first frame</p>
     </div>
-
-    <div id="modelBadge" class="model-badge">
-      <span>◌</span> <span id="modelText">Loading model info...</span>
-    </div>
-
-    <div class="counters">
-      <div class="counter">
-        <div class="counter-num" id="shotCount">0</div>
-        <div class="counter-label">FRAMES</div>
-      </div>
-      <div class="counter">
-        <div class="counter-num" id="objCount">0</div>
-        <div class="counter-label">OBJECTS</div>
-      </div>
-    </div>
-
-    <div class="detections">
-      <div class="section-label">Last Detections</div>
-      <div class="det-list" id="detList">
-        <div class="det-empty">No detections yet</div>
-      </div>
-    </div>
-
-    <div class="log-wrap">
-      <div class="section-label">Event Log</div>
-      <div class="log" id="log"></div>
-    </div>
-  </aside>
-
-  <section class="viewer">
-    <div class="viewer-header">
-      <div class="toggle-group">
-        <button class="toggle-btn" id="btnDetected" onclick="setView('detected')">DETECTED</button>
-        <button class="toggle-btn active" id="btnRaw" onclick="setView('raw')">RAW</button>
-      </div>
-      <span id="inferBadge" style="display:none"></span>
-      <span class="filename" id="currentFile">NO IMAGE</span>
-    </div>
-
-    <div class="photo-stage">
-      <div class="empty-state" id="emptyState">
-        <div class="icon">◎</div>
-        <p>PRESS SHOOT TO CAPTURE + DETECT</p>
-      </div>
-      <img id="mainPhoto" alt="Captured photo" />
-    </div>
-
-    <div class="thumb-strip" id="thumbStrip"></div>
-  </section>
+    <img id="frame" class="frame" alt="Latest detection" />
+    <span class="corner tl"></span>
+    <span class="corner tr"></span>
+    <span class="corner bl"></span>
+    <span class="corner br"></span>
+  </div>
 </main>
 
 <footer>
-  <span>RASPBERRY PI · YOLOV8n ONNX · 80 CLASSES</span>
-  <span id="footerInfo">—</span>
+  <div class="meta">
+    <span class="big" id="objCount">—</span>
+    <span id="objLabel">objects · waiting</span>
+  </div>
+
+  <div class="detections" id="detList">
+    <span class="chip-empty">No detections yet</span>
+  </div>
+
+  <div class="source">
+    src · <strong id="srcText">—</strong>
+  </div>
 </footer>
 
 <script>
-  let shotCount = 0;
-  let totalObjects = 0;
-  let currentView = 'raw';  // 'raw' or 'detected'
-  let latestLiveTimestamp = null;
-  let latestLiveData = null;
-  const photoHistory = []; // [{raw, detected, detections, inference_ms}]
+  const POLL_MS = 500;
+  const STALE_AFTER_MS = 3000;
+  const DOWN_AFTER_MS = 10000;
+
+  const frameEl = document.getElementById('frame');
+  const emptyEl = document.getElementById('emptyState');
+  const cornerEls = document.querySelectorAll('.corner');
+  const dotEl = document.getElementById('statusDot');
+  const statusTextEl = document.getElementById('statusText');
+  const clockEl = document.getElementById('clock');
+  const objCountEl = document.getElementById('objCount');
+  const objLabelEl = document.getElementById('objLabel');
+  const detListEl = document.getElementById('detList');
+  const srcEl = document.getElementById('srcText');
+
+  let lastServerTimestamp = null;
+  let lastSeenAt = 0;
+  let lastImageLoadedAt = 0;
+  let firstFrameShown = false;
+
+  // Hide corner markers until a frame is displayed.
+  cornerEls.forEach(c => c.style.display = 'none');
 
   // Clock
-  setInterval(() => {
-    document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8);
-  }, 1000);
-  document.getElementById('clock').textContent = new Date().toTimeString().slice(0,8);
-
-  // Check model status on load
-  async function checkModel() {
-    try {
-      const res = await fetch('/model_status');
-      const data = await res.json();
-      const badge = document.getElementById('modelBadge');
-      const dot = document.getElementById('statusDot');
-      const statusText = document.getElementById('statusText');
-      const modelText = document.getElementById('modelText');
-      if (data.loaded) {
-        badge.className = 'model-badge ok';
-        badge.innerHTML = '<span>✓</span> <span>YOLOv8n ONNX · READY</span>';
-        dot.classList.remove('warn');
-        statusText.textContent = 'MODEL LOADED';
-      } else {
-        badge.className = 'model-badge err';
-        badge.innerHTML = '<span>✗</span> <span>yolov8n.onnx NOT FOUND</span>';
-        dot.classList.add('warn');
-        statusText.textContent = 'MODEL MISSING';
-      }
-    } catch(e) {}
+  function tickClock() {
+    const d = new Date();
+    clockEl.textContent = d.toTimeString().slice(0, 8);
   }
-  checkModel();
+  tickClock();
+  setInterval(tickClock, 1000);
 
-  function log(msg, type = '') {
-    const el = document.getElementById('log');
-    const entry = document.createElement('div');
-    entry.className = 'log-entry ' + type;
-    const t = new Date().toTimeString().slice(0,8);
-    entry.textContent = `[${t}] ${msg}`;
-    el.prepend(entry);
-    while (el.children.length > 60) el.removeChild(el.lastChild);
-  }
-
-  function flash() {
-    const f = document.getElementById('flash');
-    f.classList.add('active');
-    setTimeout(() => f.classList.remove('active'), 100);
-  }
-
-  // Stable color per label name
+  // Deterministic color per label
   function labelColor(label) {
     let hash = 0;
-    for (const c of label) hash = (hash * 31 + c.charCodeAt(0)) & 0xffffffff;
-    const r = ((hash >> 16) & 0x7f) + 80;
-    const g = ((hash >> 8)  & 0x7f) + 80;
-    const b = (hash         & 0x7f) + 80;
-    return `rgb(${r},${g},${b})`;
+    for (const c of label) hash = ((hash << 5) - hash + c.charCodeAt(0)) | 0;
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 70%, 62%)`;
+  }
+
+  function setStatus(state, text) {
+    dotEl.classList.remove('live', 'stale', 'down');
+    if (state) dotEl.classList.add(state);
+    statusTextEl.textContent = text;
+  }
+
+  function updateStatus() {
+    const age = Date.now() - lastSeenAt;
+    if (!lastSeenAt) {
+      setStatus(null, 'CONNECTING');
+    } else if (age < STALE_AFTER_MS) {
+      setStatus('live', 'LIVE');
+    } else if (age < DOWN_AFTER_MS) {
+      setStatus('stale', `STALE · ${Math.floor(age / 1000)}s`);
+    } else {
+      setStatus('down', 'NO SIGNAL');
+    }
+  }
+
+  function formatAge(ms) {
+    if (ms < 1500) return 'just now';
+    if (ms < 60000) return `${Math.floor(ms / 1000)}s ago`;
+    return `${Math.floor(ms / 60000)}m ago`;
   }
 
   function renderDetections(detections) {
-    const list = document.getElementById('detList');
-    list.innerHTML = '';
+    detListEl.innerHTML = '';
     if (!detections || detections.length === 0) {
-      list.innerHTML = '<div class="det-empty">No objects detected</div>';
+      const span = document.createElement('span');
+      span.className = 'chip-empty';
+      span.textContent = 'No objects detected';
+      detListEl.appendChild(span);
       return;
     }
     detections.forEach(d => {
-      const item = document.createElement('div');
-      item.className = 'det-item';
+      const chip = document.createElement('span');
+      chip.className = 'chip';
       const color = labelColor(d.label);
-      item.innerHTML = `
-        <div class="det-color" style="background:${color}"></div>
-        <div class="det-label">${d.label}</div>
-        <div class="det-conf">${Math.round(d.confidence * 100)}%</div>
+      const conf = Math.round((d.confidence ?? 0) * 100);
+      chip.innerHTML = `
+        <span class="swatch" style="background:${color}"></span>
+        <span class="label">${d.label}</span>
+        <span class="conf">${conf}%</span>
       `;
-      list.appendChild(item);
+      detListEl.appendChild(chip);
     });
   }
 
-  function setView(mode) {
-    currentView = mode;
-    document.getElementById('btnDetected').classList.toggle('active', mode === 'detected');
-    document.getElementById('btnRaw').classList.toggle('active', mode === 'raw');
-
-    if (latestLiveData) {
-      showLiveFrame(latestLiveData);
-      return;
-    }
-
-    if (photoHistory.length === 0) return;
-    const latest = photoHistory[0];
-    const src = mode === 'detected'
-      ? `/detected/${latest.detected}?t=${Date.now()}`
-      : `/photos/${latest.raw}?t=${Date.now()}`;
-    const img = document.getElementById('mainPhoto');
-    img.src = src;
+  function refreshImage() {
+    // Cache-bust with the server timestamp so the browser refetches.
+    const url = `/latest_detected.jpg?t=${lastServerTimestamp}`;
+    const next = new Image();
+    next.onload = () => {
+      frameEl.src = next.src;
+      if (!firstFrameShown) {
+        frameEl.classList.add('loaded');
+        emptyEl.style.display = 'none';
+        cornerEls.forEach(c => c.style.display = '');
+        firstFrameShown = true;
+      }
+      lastImageLoadedAt = Date.now();
+    };
+    next.onerror = () => { /* swallow — keep showing previous frame */ };
+    next.src = url;
   }
 
-  function showLiveFrame(data) {
-    const img = document.getElementById('mainPhoto');
-    const empty = document.getElementById('emptyState');
-    const src = currentView === 'detected'
-      ? `/latest_detected.jpg?t=${Date.now()}`
-      : `/latest_raw.jpg?t=${Date.now()}`;
-
-    img.src = src;
-    img.style.display = 'block';
-    empty.style.display = 'none';
-    document.getElementById('currentFile').textContent = data.detected || 'LIVE FRAME';
-    renderDetections(data.detections || []);
-
-    const badge = document.getElementById('inferBadge');
-    badge.textContent = 'live';
-    badge.style.display = 'inline';
-
-    const n = (data.detections || []).length;
-    document.getElementById('footerInfo').textContent = `LIVE: ${n} obj`;
-  }
-
-  function showPhoto(entry) {
-    const img = document.getElementById('mainPhoto');
-    const empty = document.getElementById('emptyState');
-    const src = currentView === 'detected'
-      ? `/detected/${entry.detected}?t=${Date.now()}`
-      : `/photos/${entry.raw}?t=${Date.now()}`;
-    img.src = src;
-    img.style.display = 'block';
-    empty.style.display = 'none';
-    document.getElementById('currentFile').textContent = entry.detected;
-    renderDetections(entry.detections);
-
-    const badge = document.getElementById('inferBadge');
-    if (entry.inference_ms !== undefined) {
-      badge.textContent = `${entry.inference_ms}s inference`;
-      badge.style.display = 'inline';
-    }
-
-    document.querySelectorAll('.thumb').forEach(t => {
-      t.classList.toggle('active', t.dataset.file === entry.detected);
-    });
-  }
-
-  function addThumb(entry) {
-    const strip = document.getElementById('thumbStrip');
-    const img = document.createElement('img');
-    img.className = 'thumb active';
-    img.src = `/detected/${entry.detected}?t=${Date.now()}`;
-    img.dataset.file = entry.detected;
-    img.title = entry.detected;
-    img.onclick = () => showPhoto(entry);
-    strip.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
-    strip.prepend(img);
-  }
-
-  async function capture() {
-    const btn = document.getElementById('captureBtn');
-    const btnText = document.getElementById('btnText');
-    const bar = document.getElementById('progressBar');
-
-    btn.classList.add('loading');
-    btnText.textContent = '◌ DETECTING...';
-    bar.classList.add('active');
-    log('Shutter + inference triggered', 'info');
-
+  async function poll() {
     try {
-      const res = await fetch('/capture', { method: 'POST' });
+      const res = await fetch('/api/latest', { cache: 'no-store' });
       const data = await res.json();
 
-      if (data.success) {
-        flash();
-        shotCount++;
-        totalObjects += data.detections.length;
-        document.getElementById('shotCount').textContent = shotCount;
-        document.getElementById('objCount').textContent = totalObjects;
+      if (data && data.success && data.timestamp) {
+        lastSeenAt = Date.now();
+        if (data.timestamp !== lastServerTimestamp) {
+          lastServerTimestamp = data.timestamp;
+          refreshImage();
+          renderDetections(data.detections || []);
 
-        const entry = {
-          raw: data.raw,
-          detected: data.detected,
-          detections: data.detections,
-          inference_ms: data.inference_ms
-        };
-        photoHistory.unshift(entry);
-        addThumb(entry);
-        showPhoto(entry);
-
-        // Auto-switch to detected view
-        setView('detected');
-
-        const n = data.detections.length;
-        log(`${n} object${n !== 1 ? 's' : ''} detected · ${data.inference_ms}s`, 'ok');
-        data.detections.forEach(d => {
-          log(`  → ${d.label} (${Math.round(d.confidence*100)}%)`, 'ok');
-        });
-        document.getElementById('footerInfo').textContent =
-          `LAST: ${n} obj · ${data.inference_ms}s`;
-      } else {
-        log(`Error: ${data.error}`, 'err');
+          const n = (data.detections || []).length;
+          objCountEl.textContent = n;
+          objLabelEl.textContent = `${n === 1 ? 'object' : 'objects'} detected`;
+          srcEl.textContent = (data.source || 'unknown').toUpperCase();
+        }
       }
-    } catch(e) {
-      log(`Network error: ${e.message}`, 'err');
-    } finally {
-      btn.classList.remove('loading');
-      btnText.textContent = '⬤ SHOOT';
-      bar.classList.remove('active');
+    } catch (e) { /* swallow — status will degrade naturally */ }
+    updateStatus();
+
+    // Update the "ago" text on the obj label so it feels alive
+    if (firstFrameShown && lastImageLoadedAt) {
+      const age = Date.now() - lastImageLoadedAt;
+      const n = detListEl.querySelectorAll('.chip').length;
+      objLabelEl.textContent = `${n === 1 ? 'object' : 'objects'} · ${formatAge(age)}`;
     }
   }
 
-  document.addEventListener('keydown', e => {
-    if (e.code === 'Space' && e.target === document.body) {
-      e.preventDefault();
-      capture();
-    }
-  });
-
-  // Load existing detected photos on startup
-  async function loadExisting() {
-    try {
-      const res = await fetch('/latest');
-      const data = await res.json();
-      if (data.photos.length > 0) {
-        data.photos.forEach(f => {
-          const raw = f.replace('detected_', 'photo_');
-          const entry = { raw, detected: f, detections: [], inference_ms: null };
-          photoHistory.push(entry);
-          addThumb(entry);
-        });
-        showPhoto(photoHistory[0]);
-        shotCount = data.photos.length;
-        document.getElementById('shotCount').textContent = shotCount;
-        log(`Loaded ${data.photos.length} existing photo(s)`, 'info');
-      }
-    } catch(e) {}
-  }
-  loadExisting();
-
-  async function pollLatestFrame() {
-    try {
-      const res = await fetch('/api/latest');
-      const data = await res.json();
-      if (!data.success || !data.timestamp || data.timestamp === latestLiveTimestamp) {
-        return;
-      }
-
-      latestLiveTimestamp = data.timestamp;
-      latestLiveData = data;
-      showLiveFrame(data);
-
-      const n = (data.detections || []).length;
-      shotCount++;
-      totalObjects += n;
-      document.getElementById('shotCount').textContent = shotCount;
-      document.getElementById('objCount').textContent = totalObjects;
-      log(`Live frame received · ${n} object${n !== 1 ? 's' : ''}`, 'info');
-    } catch(e) {}
-  }
-
-  setInterval(pollLatestFrame, 1000);
-  pollLatestFrame();
+  setInterval(poll, POLL_MS);
+  poll();
 </script>
 </body>
 </html>
