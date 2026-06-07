@@ -68,7 +68,7 @@ services:
   #   working_dir: /app
   #   command: python imuSensorThread.py  # Needs to set what is to run when the container starts, otherwise it will just run the default command which is to start a bash terminal
 
-# RealSense D421 wrapper. Publishes standard depth/IR/image topics.
+# RealSense D421 wrapper. Publishes standard depth/IR/image topics and services.
   realsense_camera_thread:
     build:
       context: .
@@ -83,8 +83,10 @@ services:
       - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
     command: >
       bash -lc "ros2 launch realsense2_camera rs_launch.py
+      camera_namespace:=camera
       camera_name:=camera
-      depth_module.profile:=640x480x30
+      depth_module.depth_profile:=640x480x15
+      depth_module.infra_profile:=640x480x15
       enable_depth:=true
       enable_infra1:=true
       enable_infra2:=true
@@ -93,28 +95,7 @@ services:
       temporal_filter.enable:=true
       hole_filling_filter.enable:=true"
 
-# Converts the RealSense depth image into the LaserScan used by nav/mapping.
-  depth_scan_thread:
-    build:
-      context: .
-      dockerfile: mappingThread-Local/Dockerfile
-    container_name: roverpi-depth_scan_thread
-    network_mode: host
-    environment:
-      - PYTHONUNBUFFERED=1
-      - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
-    command: >
-      bash -lc "ros2 run depthimage_to_laserscan depthimage_to_laserscan_node
-      --ros-args
-      -r image:=/camera/camera/depth/image_rect_raw
-      -r camera_info:=/camera/camera/depth/camera_info
-      -r scan:=/sensors/depth_scan
-      -p scan_height:=20
-      -p range_min:=0.2
-      -p range_max:=6.0
-      -p output_frame:=camera_depth_frame"
-
-# Publishes obstacle_detected/clear_path messages for mainLogic.py.
+# Converts RealSense depth image into LaserScan and obstacle messages.
   depth_camera_thread:
     build:
       context: .
