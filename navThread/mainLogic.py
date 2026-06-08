@@ -356,7 +356,7 @@ def main(args=None):
         # mainLogic_node.cancel_all_timers()
         mainLogic_node.controller.stop()
 
-        node.destroy_node()
+        Node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
 
