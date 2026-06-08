@@ -11,6 +11,7 @@ RUN apt-get \
         python3-opencv \
         python3-numpy \
         python3-flask \
+        python3-libcamera \
         libcamera-tools \
         libcap-dev \
     && rm -rf /var/lib/apt/lists/*
