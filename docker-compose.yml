@@ -103,7 +103,7 @@ services:
       - ./picam_server:/app
     environment:
       - PYTHONUNBUFFERED=1
-      - PYTHONPATH=/app
+      - PYTHONPATH=/usr/lib/python3/dist-packages:/app
       - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
     command: bash -lc "source /opt/ros/jazzy/setup.bash && python3 -u picamThread.py"
 
