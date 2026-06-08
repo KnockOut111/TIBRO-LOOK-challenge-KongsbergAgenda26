@@ -181,6 +181,7 @@ class MainLogicNode(Node):
                 return
             self.locomotion_mode = LocomotionModes.CRABBING
             self.controller.crabbing()
+            
             self.get_logger().info("crabbing activated")
 
         else:
@@ -229,8 +230,15 @@ class MainLogicNode(Node):
             if self.locomotion_mode == LocomotionModes.CRABBING:
                 self.controller.crab_sideways()
                 self.controller.backward()
+<<<<<<< Updated upstream
             elif self.locomotion_mode == LocomotionModes.POINT_TURN:
                 self.controller.point_turn_left()
+=======
+                self.get_logger().info("Crabbing left")
+            elif self.locomotion_mode == LocomotionModes.POINT_TURN:
+                self.controller.forward_pointTurn_left
+                self.get_logger().info("Turning right")
+>>>>>>> Stashed changes
             else:
                 self.controller.left_turn()
             # try:
@@ -250,8 +258,15 @@ class MainLogicNode(Node):
             if self.locomotion_mode == LocomotionModes.CRABBING:
                 self.controller.crab_sideways()
                 self.controller.forward()
+<<<<<<< Updated upstream
             elif self.locomotion_mode == LocomotionModes.POINT_TURN:
                 self.controller.point_turn_right()
+=======
+                self.get_logger().info("Crabbing right")
+            elif self.locomotion_mode == LocomotionModes.POINT_TURN:
+                self.controller.forward_pointTurn_right
+                self.get_logger().info("Turning left in point_mode")
+>>>>>>> Stashed changes
             else:
                 self.controller.right_turn()
                 

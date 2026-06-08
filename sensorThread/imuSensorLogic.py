@@ -50,7 +50,7 @@ class ImuSensorNode(Node):
             self.get_logger().warning(
                 f"publish_rate_hz={rate} is invalid, falling back to 50.0 Hz"
             )
-            rate = 50.0
+            rate = 30.0 #40
         if not 0.0 <= self.orientation_filter_alpha <= 1.0:
             self.get_logger().warning(
                 "orientation_filter_alpha must be between 0.0 and 1.0, "

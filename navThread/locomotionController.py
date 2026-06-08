@@ -29,7 +29,8 @@ class LocomotionController():
         self.wheelState_crabbing = True
         self.right_turn_ack = False
         self.left_turn_ack = False
-
+        self.pointTurn_left_bool = False
+        self.pointTurn_right_bool = False
 
         self.STOP = -1
         self.LEFT_FORWARD = 0
@@ -140,11 +141,26 @@ class LocomotionController():
 
     def forward(self):
         self.wheelState_crabbing = True
+        self.pointTurn_left_bool = False
+        self.pointTurn_right_bool = False
         self.set_drive(self.LEFT_FORWARD, self.RIGHT_FORWARD)
 
     def backward(self):
         self.wheelState_crabbing = True
+        self.pointTurn_left_bool = False
+        self.pointTurn_right_bool = False
+
         self.set_drive(self.LEFT_BACKWARD, self.RIGHT_BACKWARD)
+
+    def forward_pointTurn_left(self):
+        self.pointTurn_left_bool = True
+        self.pointTurn_right_bool = False
+        self.set_drive(self.LEFT_FORWARD, self.RIGHT_BACKWARD)
+
+    def forward_pointTurn_right(self):
+        self.pointTurn_left_bool = False
+        self.pointTurn_right_bool = True
+        self.set_drive(self.LEFT_BACKWARD, self.RIGHT_FORWARD)
 
     def right_turn(self):
         self.wheelState_crabbing = False
@@ -186,6 +202,7 @@ class LocomotionController():
 
         for wheel, angle in target_angles.items():
             self.set_wheel_steering(wheel, angle)
+<<<<<<< Updated upstream
     
     def point_turn_left(self):
         self.point_turn()
@@ -194,8 +211,14 @@ class LocomotionController():
     def point_turn_right(self):
         self.point_turn()
         self.set_drive(self.LEFT_FORWARD, self.RIGHT_BACKWARD)
+=======
+        
+        if self.pointTurn_left_bool == True:
+            self.forward_pointTurn_left()
+        elif self.pointTurn_right_bool == True:
+            self.forward_pointTurn_right()
+>>>>>>> Stashed changes
 
-        #Motion: Fix so that only rear and front wheels turn in opposite direction, the middle ones must be still.
 
     # Only pointed forward or 90 deg sideways.
     def crabbing(self):
