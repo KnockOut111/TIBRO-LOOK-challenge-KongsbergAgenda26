@@ -1,0 +1,16 @@
+services:
+  picam_detect_server:
+    build:
+      context: .
+      dockerfile: picam_server/Dockerfile.server
+    container_name: roverpi-picam_detect_server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./picam_server:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+      - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
+    command: bash -lc "source /opt/ros/jazzy/setup.bash && python3 -u app_detect.py"
+    

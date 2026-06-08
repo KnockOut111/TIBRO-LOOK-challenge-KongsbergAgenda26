@@ -149,19 +149,19 @@ picam-logs:
 
 # PiCam detect server (PC-side) targets
 picam-detect-build:
-	docker compose -f docker-compose.yml up -d --build picam_detect_server
-	docker compose -f docker-compose.yml logs -f picam_detect_server
+	docker compose -f docker-compose-server.yml up -d --build picam_detect_server
+	docker compose -f docker-compose-server.yml logs -f picam_detect_server
 
 picam-detect-restart:
-	docker compose -f docker-compose.yml restart picam_detect_server
+	docker compose -f docker-compose-server.yml restart picam_detect_server
 
 picam-detect-stop:
-	docker compose -f docker-compose.yml stop picam_detect_server
+	docker compose -f docker-compose-server.yml stop picam_detect_server
 
 picam-detect-clean:
-	docker compose stop picam_detect_server
-	docker compose rm -f picam_detect_server
+	docker compose -f docker-compose-server.yml stop picam_detect_server
+	docker compose -f docker-compose-server.yml rm -f picam_detect_server
 
 picam-detect-logs:
-	docker compose -f docker-compose.yml logs -f picam_detect_server
+	docker compose -f docker-compose-server.yml logs -f picam_detect_server
 
