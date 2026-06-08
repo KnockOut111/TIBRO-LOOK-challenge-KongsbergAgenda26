@@ -209,7 +209,7 @@ class MainLogicNode(Node):
         ### Main commands for moving the rover
         if cmd == "forward":
             if self.locomotion_mode == LocomotionModes.CRABBING:
-            self.controller.crab_straight()
+                self.controller.crab_straight()
 
             self.controller.forward()
             self.get_logger().info("Moving forward")
