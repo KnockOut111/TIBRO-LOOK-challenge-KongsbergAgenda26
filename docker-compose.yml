@@ -107,12 +107,28 @@ services:
       - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
     command: bash -lc "source /opt/ros/jazzy/setup.bash && python3 -u picamThread.py"
 
+<<<<<<< HEAD
+  # picam_detect_server:
+  #   build:
+  #     context: .
+  #     dockerfile: picam_server/Dockerfile.server
+  #   container_name: roverpi-picam_detect_server
+  #   network_mode: host
+  #   volumes:
+  #     - ./picam_server:/app
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - PYTHONPATH=/app
+  #     - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
+  #   command: bash -lc "source /opt/ros/jazzy/setup.bash && python3 -u app_detect.py"
+=======
   picam_detect_server:
     build:
       context: .
       dockerfile: picam_server/Dockerfile.server
     container_name: roverpi-picam_detect_server
-    network_mode: host
+    ports:
+      - "5000:5000"
     volumes:
       - ./picam_server:/app
     environment:
@@ -120,6 +136,7 @@ services:
       - PYTHONPATH=/app
       - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
     command: bash -lc "source /opt/ros/jazzy/setup.bash && python3 -u app_detect.py"
+>>>>>>> 876169897d042b28957e9c4624e823da400059fc
 
 # RealSense D421 wrapper. Publishes standard depth/IR/image topics and services.
   realsense_camera_thread:
