@@ -229,11 +229,10 @@ class MainLogicNode(Node):
             if self.locomotion_mode == LocomotionModes.CRABBING:
                 self.controller.crab_sideways()
                 self.controller.backward()
-                self.get_logger().info("Crabbing left")
+            elif self.locomotion_mode == LocomotionModes.POINT_TURN:
+                self.controller.point_turn_left()
             else:
                 self.controller.left_turn()
-                self.get_logger().info("Turning left")
-
             # try:
             #     turn_angle = int(parts[1])
             # except ValueError:
@@ -251,11 +250,11 @@ class MainLogicNode(Node):
             if self.locomotion_mode == LocomotionModes.CRABBING:
                 self.controller.crab_sideways()
                 self.controller.forward()
-                self.get_logger().info("Crabbing right")
+            elif self.locomotion_mode == LocomotionModes.POINT_TURN:
+                self.controller.point_turn_right()
             else:
                 self.controller.right_turn()
-                self.get_logger().info("Turning right")
-
+                
             # try:
             #     turn_angle = int(parts[1])
             # except ValueError:
