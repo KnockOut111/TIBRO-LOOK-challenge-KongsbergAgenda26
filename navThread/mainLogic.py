@@ -310,6 +310,7 @@ class MainLogicNode(Node):
             new_angle = current_angle + delta
 
             self.controller.set_wheel_steering(wheel, new_angle)
+
             self.get_logger().info(
                 f"Adjusted {wheel_name}: {current_angle} -> {new_angle}"
             )
