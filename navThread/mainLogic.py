@@ -219,8 +219,8 @@ class MainLogicNode(Node):
             if self.locomotion_mode == LocomotionModes.CRABBING:
                 self.controller.crab_straight()
 
-                self.controller.backward()
-                self.get_logger().info("Moving backward")
+            self.controller.backward()
+            self.get_logger().info("Moving backward")
 
         elif cmd == "stop":
             self.controller.stop()
@@ -289,6 +289,30 @@ class MainLogicNode(Node):
 
             wheel_name = parts[1].upper()
 
+        elif cmd == "adjust_wheel_steering":
+            if len(parts) != 3:
+                self.get_logger().warn("Input must be: adjust_wheel_steering FL 1")
+                return
+
+            wheel_name = parts[1].upper()
+
+            try:
+                delta = int(parts[2])
+                wheel = SteeringServos[wheel_name]
+            except ValueError:
+                self.get_logger().warn(f"Invalid delta: {parts[2]}")
+                return
+            except KeyError:
+                self.get_logger().warn(f"Invalid wheel: {wheel_name}")
+                return
+
+            current_angle = self.controller.current_steering_angles[wheel]
+            new_angle = current_angle + delta
+
+            self.controller.set_wheel_steering(wheel, new_angle)
+            self.get_logger().info(
+                f"Adjusted {wheel_name}: {current_angle} -> {new_angle}"
+            )
 
             try:
                 angle = int(parts[2])

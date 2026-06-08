@@ -5,13 +5,13 @@
 ### MAIN COMMANDS ###
 
 roverpi-manual-mode-build:
-	docker compose -f docker-compose.yml up -d --build nav_thread
-	docker compose -f docker-compose.yml logs -f nav_thread
+	docker compose -f docker-compose.yml up --build nav_thread
+	docker compose -f docker-compose.yml run --rm -it manual_command_thread
+	
 roverpi-startsys:
 	docker compose -f docker-compose.yml build
 	docker compose -f docker-compose.yml up -d
 	docker compose -f docker-compose.yml logs -f
-
 
 roverpi-build:
 	docker compose -f docker-compose.yml build

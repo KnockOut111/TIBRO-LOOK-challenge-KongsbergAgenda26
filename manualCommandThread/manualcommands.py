@@ -35,6 +35,11 @@ class ManualCommandNode(Node):
         self.get_logger().info("Controls: arrows = drive, space = stop, a = arm, m = mode, q = quit")
         self.get_logger().info(f"Starting locomotion mode: {self.current_mode}")
 
+        self.calibration_wheels = ["FL", "FR", "CL", "CR", "RL", "RR"]
+        self.selected_wheel_index = 0
+        self.selected_wheel = self.calibration_wheels[self.selected_wheel_index]
+        self.calibration_step = 1
+
     def publish_main_mode(self, command: str):
         msg = String()
         msg.data = command
@@ -102,6 +107,7 @@ class ManualCommandNode(Node):
 
             elif key == "a":
                 self.publish_main_mode("arm")
+                self.publish_loco_mode(self.current_mode)
                 self.get_logger().info("Armed")
 
             elif key == "m":
@@ -112,6 +118,50 @@ class ManualCommandNode(Node):
                 self.publish_main_mode("quit")
                 self.get_logger().info("Quit")
                 break
+
+            elif key in ["1","2","3","4","5","6"]:
+                self.selected_wheel_index = int(key)-1
+                self.selected_wheel = self.calibration_wheels[self.selected_wheel_index]
+
+                self.get_logger().info(
+                    f"Selected wheel: {self.selected_wheel}"
+                )
+
+
+            elif key == "+":
+                self.publish_command(
+                    f"adjust_wheel_steering {self.selected_wheel} 1"
+                )
+
+                self.get_logger().info(
+                    f"{self.selected_wheel} +1 degree"
+                )
+
+
+            elif key == "-":
+                self.publish_command(
+                    f"adjust_wheel_steering {self.selected_wheel} -1"
+                )
+
+                self.get_logger().info(
+                    f"{self.selected_wheel} -1 degree"
+                )
+
+
+            elif key == "s":
+                self.publish_command("update_steering")
+
+                self.get_logger().info(
+                    "Saved steering calibration"
+                )
+
+
+            elif key == "r":
+                self.publish_command("reset_steering")
+
+                self.get_logger().info(
+                    "Reset steering"
+                )
 
     def shutdown_callback(self, msg):
         if msg.data.strip().lower() == "shutdown":

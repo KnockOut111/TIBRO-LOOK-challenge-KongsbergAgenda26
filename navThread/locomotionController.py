@@ -47,7 +47,7 @@ class LocomotionController():
             SteeringServos.RR: 83,
         }
 
-        self.current_steering_angles = {}
+        self.current_steering_angles = self.steering_neutral.copy()
         
 
 ### Steering servo initialization, calibration, storage and loading ###
@@ -123,9 +123,9 @@ class LocomotionController():
 
     # Setting one wheel to a given angle
     def set_wheel_steering(self, wheel: SteeringServos, angle: int):
-        angle = max(0, min(180, angle)) # Ensure angle is within valid range
+        angle = max(0, min(180, angle))
         self.kit.servo[wheel.value].angle = angle
-        #self.current_steering_angles[wheel] = angle #Uncomment if new values are wante to calibrate for neutral pos
+        self.current_steering_angles[wheel] = angle
 
     # Setting all wheels to same amount of degrees
     def set_all_steering_servos(self, angle: int):
