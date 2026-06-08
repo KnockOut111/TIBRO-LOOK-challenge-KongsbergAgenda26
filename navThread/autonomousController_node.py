@@ -47,12 +47,7 @@ class AutonomousController(Node):
         self.fsm_state_pub = self.create_publisher(String, "/rover/fsm_state", 10)
 
         # subs
-        self.create_subscription(
-            String,
-            "/autonomousController_node/start_autonomous_program",
-            self.start_program_callback,
-            10,
-        )
+        self.create_subscription( String, "/autonomousController_node/start_autonomous_program", self.start_program_callback, 10)
         self.create_subscription(String, "/rover/system_shutdown", self.shutdown_callback, 10)
         self.create_subscription(String, "/rover/mainMode", self.main_mode_callback, 10)
         self.create_subscription(Imu, "/sensors/imu_68", self.imu_callback, 10)
@@ -99,13 +94,14 @@ class AutonomousController(Node):
             self.transition(RoverState.STOPPED)
 
     def start_program_callback(self, msg):
-        if not self.is_armed:
-            self.get_logger().warn("Start trigger ignored: rover not armed.")
-            return
-        if self.current_state != RoverState.IDLE:
-            self.get_logger().warn(f"Start trigger ignored: already in {self.current_state.name}.")
-            return
-        self.transition(RoverState.STARTING)
+        if msg == "start_autonomous_system":
+            if not self.is_armed:
+                self.get_logger().warn("Start trigger ignored: rover not armed.")
+                return
+            if self.current_state != RoverState.IDLE:
+                self.get_logger().warn(f"Start trigger ignored: already in {self.current_state.name}.")
+                return
+            self.transition(RoverState.STARTING)
 
     def shutdown_callback(self, msg):
         if msg.data.strip().lower() == "shutdown":
