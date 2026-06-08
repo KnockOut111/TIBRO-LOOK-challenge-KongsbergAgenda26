@@ -39,12 +39,12 @@ class LocomotionController():
         self.RIGHT_BACKWARD = 0
 
         self.steering_neutral = {
-            SteeringServos.FL: 65,
-            SteeringServos.FR: 105,
-            SteeringServos.CL: 115,
-            SteeringServos.CR: 80,
-            SteeringServos.RL: 115,
-            SteeringServos.RR: 83,
+            SteeringServos.FL: 75,
+            SteeringServos.FR: 100,
+            SteeringServos.CL: 105,
+            SteeringServos.CR: 70,
+            SteeringServos.RL: 105,
+            SteeringServos.RR: 80,
         }
 
         self.current_steering_angles = self.steering_neutral.copy()
