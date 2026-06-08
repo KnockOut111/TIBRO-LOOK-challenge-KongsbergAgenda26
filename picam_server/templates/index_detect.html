@@ -94,6 +94,46 @@
       text-transform: uppercase;
     }
 
+    .capture-wrap {
+      display: flex;
+      align-items: center;
+    }
+
+    #captureBtn {
+      border: 1px solid var(--accent);
+      background: transparent;
+      color: var(--accent);
+      font-family: var(--display);
+      font-size: 1rem;
+      letter-spacing: 0.16em;
+      padding: 0.55rem 1rem;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: color 0.15s, border-color 0.15s, transform 0.15s;
+    }
+
+    #captureBtn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.18s ease;
+    }
+
+    #captureBtn:hover::before { transform: scaleX(1); }
+    #captureBtn:hover { color: #000; }
+    #captureBtn:active { transform: scale(0.98); }
+    #captureBtn span { position: relative; z-index: 1; }
+    #captureBtn.loading {
+      pointer-events: none;
+      border-color: var(--text-dim);
+      color: var(--text-dim);
+    }
+    #captureBtn.loading::before { transform: scaleX(0) !important; }
+
     .status {
       display: inline-flex;
       align-items: center;
@@ -234,6 +274,44 @@
       text-transform: none;
     }
 
+    .meta.secondary .big {
+      color: var(--warn);
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .reset-btn {
+      border: 1px solid var(--border-strong);
+      background: transparent;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 0.45rem 0.7rem;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+
+    .reset-btn:hover {
+      border-color: var(--warn);
+      color: var(--warn);
+      background: rgba(243, 169, 83, 0.08);
+    }
+
+    .reset-btn:active {
+      transform: translateY(1px);
+    }
+
+    .reset-btn.loading {
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
     .detections {
       display: flex;
       gap: 0.5rem;
@@ -315,6 +393,9 @@
     <span class="sub">// Live Detection Feed</span>
   </div>
   <div class="header-meta">
+    <div class="capture-wrap">
+      <button id="captureBtn" type="button"><span>SHOOT</span></button>
+    </div>
     <span class="status">
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">CONNECTING</span>
@@ -343,6 +424,14 @@
     <span id="objLabel">objects · waiting</span>
   </div>
 
+  <div class="meta secondary">
+    <div class="meta-row">
+      <span class="big" id="metalCount">0</span>
+      <button class="reset-btn" id="metalResetBtn" type="button">Reset</button>
+    </div>
+    <span id="metalLabel">metal hits</span>
+  </div>
+
   <div class="detections" id="detList">
     <span class="chip-empty">No detections yet</span>
   </div>
@@ -365,13 +454,18 @@
   const clockEl = document.getElementById('clock');
   const objCountEl = document.getElementById('objCount');
   const objLabelEl = document.getElementById('objLabel');
+  const metalCountEl = document.getElementById('metalCount');
+  const metalLabelEl = document.getElementById('metalLabel');
+  const metalResetBtn = document.getElementById('metalResetBtn');
   const detListEl = document.getElementById('detList');
   const srcEl = document.getElementById('srcText');
+  const captureBtn = document.getElementById('captureBtn');
 
   let lastServerTimestamp = null;
   let lastSeenAt = 0;
   let lastImageLoadedAt = 0;
   let firstFrameShown = false;
+  let lastMetalCount = 0;
 
   // Hide corner markers until a frame is displayed.
   cornerEls.forEach(c => c.style.display = 'none');
@@ -440,6 +534,60 @@
     });
   }
 
+  async function captureImage() {
+    if (captureBtn.classList.contains('loading')) return;
+
+    captureBtn.classList.add('loading');
+    captureBtn.querySelector('span').textContent = 'CAPTURING';
+    try {
+      const res = await fetch('/capture', { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || `Capture failed (${res.status})`);
+      }
+
+      lastServerTimestamp = null;
+      await poll();
+    } catch (err) {
+      statusTextEl.textContent = `CAPTURE ERROR`;
+      console.error(err);
+    } finally {
+      captureBtn.classList.remove('loading');
+      captureBtn.querySelector('span').textContent = 'SHOOT';
+    }
+  }
+
+  async function resetMetalCount() {
+    if (metalResetBtn.classList.contains('loading')) return;
+
+    metalResetBtn.classList.add('loading');
+    try {
+      const res = await fetch('/api/metal/reset', { method: 'POST' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || `Reset failed (${res.status})`);
+      }
+
+      lastMetalCount = 0;
+      metalCountEl.textContent = '0';
+      metalLabelEl.textContent = 'metal hits';
+    } catch (err) {
+      console.error(err);
+      metalLabelEl.textContent = 'reset failed';
+    } finally {
+      metalResetBtn.classList.remove('loading');
+    }
+  }
+
+  captureBtn.addEventListener('click', captureImage);
+  metalResetBtn.addEventListener('click', resetMetalCount);
+  window.addEventListener('keydown', (event) => {
+    if (event.code === 'Space' && !event.repeat) {
+      event.preventDefault();
+      captureImage();
+    }
+  });
+
   function refreshImage() {
     // Cache-bust with the server timestamp so the browser refetches.
     const url = `/latest_detected.jpg?t=${lastServerTimestamp}`;
@@ -462,6 +610,12 @@
     try {
       const res = await fetch('/api/latest', { cache: 'no-store' });
       const data = await res.json();
+
+      if (data && typeof data.metal_count === 'number') {
+        lastMetalCount = data.metal_count;
+        metalCountEl.textContent = lastMetalCount;
+        metalLabelEl.textContent = `${lastMetalCount === 1 ? 'hit' : 'hits'} total`;
+      }
 
       if (data && data.success && data.timestamp) {
         lastSeenAt = Date.now();

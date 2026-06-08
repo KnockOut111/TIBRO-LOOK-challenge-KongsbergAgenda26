@@ -1,12 +1,18 @@
-import sys
-import types
-import os
-import time
+import atexit
 import json
+import os
 import shutil
+import sys
+import threading
+import time
+import types
+
 import numpy as np
 import cv2
+import rclpy
+from rclpy.node import Node
 from flask import Flask, render_template, jsonify, send_from_directory, request
+from std_msgs.msg import String
 
 app = Flask(__name__, template_folder="templates")
 
@@ -24,6 +30,14 @@ latest_frame = {
     "timestamp": None,
     "source": None,
 }
+
+metal_counter_lock = threading.Lock()
+metal_detect_count = 0
+metal_last_seen = None
+metal_counter_node = None
+metal_counter_thread = None
+
+METAL_TOPIC = "metal_sensor/metal_detected"
 
 # COCO class names (80 classes YOLOv8 was trained on)
 COCO_CLASSES = [
@@ -82,6 +96,72 @@ def get_camera():
 
     from picamzero import Camera
     return Camera()
+
+
+class MetalCounterNode(Node):
+    def __init__(self):
+        super().__init__("picam_metal_counter")
+        self.create_subscription(String, METAL_TOPIC, self.metal_callback, 10)
+        self.get_logger().info(f"Listening for metal events on {METAL_TOPIC}")
+
+    def metal_callback(self, msg):
+        global metal_detect_count, metal_last_seen
+        if msg.data.strip().lower() != "metal_detected":
+            return
+
+        with metal_counter_lock:
+            metal_detect_count += 1
+            metal_last_seen = time.time()
+
+
+def start_metal_counter_listener():
+    global metal_counter_node, metal_counter_thread
+
+    if metal_counter_node is not None:
+        return
+
+    try:
+        if not rclpy.ok():
+            rclpy.init(args=None)
+    except Exception as exc:
+        print(f"⚠️  ROS counter listener not started: {exc}")
+        return
+
+    metal_counter_node = MetalCounterNode()
+
+    def spin_listener():
+        try:
+            rclpy.spin(metal_counter_node)
+        except Exception as exc:
+            print(f"⚠️  Metal counter listener stopped: {exc}")
+
+    metal_counter_thread = threading.Thread(target=spin_listener, daemon=True)
+    metal_counter_thread.start()
+
+
+def stop_metal_counter_listener():
+    global metal_counter_node, metal_counter_thread
+
+    if metal_counter_node is None:
+        return
+
+    try:
+        metal_counter_node.destroy_node()
+    except Exception:
+        pass
+
+    metal_counter_node = None
+
+    try:
+        if rclpy.ok():
+            rclpy.shutdown()
+    except Exception:
+        pass
+
+    metal_counter_thread = None
+
+
+atexit.register(stop_metal_counter_listener)
 
 
 def run_detection(image_path, out_path, conf_threshold=0.4, iou_threshold=0.45):
@@ -300,10 +380,31 @@ def upload():
 
 @app.route("/api/latest")
 def api_latest():
+    with metal_counter_lock:
+        metal_count = metal_detect_count
+        last_seen = metal_last_seen
+
     return jsonify({
         "success": latest_frame["raw"] is not None,
         **latest_frame,
+        "metal_count": metal_count,
+        "metal_last_seen": last_seen,
     })
+
+
+@app.route("/api/metal/reset", methods=["POST"])
+def api_reset_metal_counter():
+    global metal_detect_count, metal_last_seen
+
+    with metal_counter_lock:
+        metal_detect_count = 0
+        metal_last_seen = None
+
+        return jsonify({
+            "success": True,
+            "metal_count": metal_detect_count,
+            "metal_last_seen": metal_last_seen,
+        })
 
 
 @app.route("/latest_raw.jpg")
@@ -332,5 +433,6 @@ def model_status():
 
 if __name__ == "__main__":
     load_model()
+    start_metal_counter_listener()
     print("📷 PiCam DETECT server starting on http://0.0.0.0:5000")
     app.run(host="0.0.0.0", port=5000, debug=False)

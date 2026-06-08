@@ -112,7 +112,8 @@ services:
       context: .
       dockerfile: picam_server/Dockerfile.server
     container_name: roverpi-picam_detect_server
-    network_mode: host
+    ports:
+      - "5000:5000"
     volumes:
       - ./picam_server:/app
     environment:
