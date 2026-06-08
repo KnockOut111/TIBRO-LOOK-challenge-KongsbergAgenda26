@@ -235,7 +235,8 @@ class MainLogicNode(Node):
             
             # Need to fix stearing for different modes.
             self.controller.left_turn()
-            self.get_logger().info("Turning left " + str(turn_angle) + " degrees. ")
+            self.get_logger().info("Turning left")
+            # self.get_logger().info("Turning left " + str(turn_angle) + " degrees. ")
 
         elif cmd == "right_turn":  
             if len(parts) != 1:
@@ -253,7 +254,8 @@ class MainLogicNode(Node):
 
             # Example angle, adjust as needed
             self.controller.right_turn()
-            self.get_logger().info("Turning right " + str(turn_angle) + " degrees. ")
+            self.get_logger().info("Turning right")
+            #self.get_logger().info("Turning right " + str(turn_angle) + " degrees. ")
 
 
 
