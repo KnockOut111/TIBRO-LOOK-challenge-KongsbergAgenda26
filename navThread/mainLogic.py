@@ -84,7 +84,7 @@ class MainLogicNode(Node):
 ########### Calibration functions ################################################################
     def wheel_calibration(self):
         self.get_logger().info("Initializing the steering servos...")
-        self.controller.load_neutral_positions()
+        #self.controller.load_neutral_positions()
         self.controller.setting_neutral_steering_states()
 
         self.get_logger().info("Finished calibrating the steering servos")
