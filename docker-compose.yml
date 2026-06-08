@@ -24,8 +24,8 @@ services:
  
   autonomous_controller_thread:
     build:
-      context: ./autonomous_controller_thread
-      dockerfile: /Dockerfile
+      context: ./autonomousControllerThread
+      dockerfile: Dockerfile
     container_name: roverpi-autonomous_controller_thread
     network_mode: host
     volumes:

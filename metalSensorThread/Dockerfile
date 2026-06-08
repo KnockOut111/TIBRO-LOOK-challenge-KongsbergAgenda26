@@ -10,6 +10,6 @@ RUN apt-get -o Acquire::Check-Date=false \
         i2c-tools \
     && rm -rf /var/lib/apt/lists/*
 
-COPY metalSensorThread/ /app/
+COPY . /app/
 
 CMD ["bash", "-lc", "source /opt/ros/jazzy/setup.bash && python3 -u metalSensorLogic.py"]
