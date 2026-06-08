@@ -1,5 +1,4 @@
-FROM ros:jazzy-ros-base
-
+FROM --platform=linux/arm64 ros:jazzy-ros-base
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \

@@ -2,6 +2,7 @@
 
 services:
   nav_thread:
+    platform: linux/arm64
     build: 
       context: .
       dockerfile: navThread/Dockerfile
@@ -36,6 +37,7 @@ services:
     command: python3 -u autonomousController_node.py
 
   metal_sensor_thread:
+    platform: linux/arm64
     build:
       context: .
       dockerfile: metalSensorThread/Dockerfile
@@ -53,6 +55,7 @@ services:
     command: python3 -u metalSensorLogic.py
   
   imu_sensor_thread:
+    platform: linux/arm64
     build:
       context: .
       dockerfile: sensorThread/Dockerfile
@@ -85,6 +88,7 @@ services:
 
 # RealSense D421 wrapper. Publishes standard depth/IR/image topics and services.
   realsense_camera_thread:
+    platform: linux/arm64
     build:
       context: .
       dockerfile: mappingThread-Local/Dockerfile
@@ -112,6 +116,7 @@ services:
 
 # Converts RealSense depth image into LaserScan and obstacle messages.
   depth_camera_thread:
+    platform: linux/arm64
     build:
       context: .
       dockerfile: mappingThread-Local/Dockerfile

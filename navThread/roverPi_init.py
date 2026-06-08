@@ -5,9 +5,7 @@ import time
 
 def init_roverPi():
     print("Initializing roverPi system... ")
-    
-    #time.sleep(1) #Simulating inittialization steps
-   
+       
    #Need to implement initialization logic here ....
     wheel_calibration()
     camera1_calibration()
@@ -20,7 +18,7 @@ def wheel_calibration(self):
     print("Calibrating the servos for straight forward motion and 90 degree turn. ")
 
     for steeringPos in SteeringServos:
-        self.LocomotionController.set_wheel_steering(steeringPos, 90) # Set all wheels to 90 degrees for straight forward motion. Adjust if needed.
+        self.LocomotionController.setting_netural_steering_states(steeringPos) # Set all wheels to 90 degrees for straight forward motion. Adjust if needed.
     
     print("Finished calibrating the servos for straight forward motion. ")
     return

@@ -31,11 +31,11 @@ class RoverState(Enum):
 
 class RecoverySubState(Enum):
     STOPPING = auto()
-    BACKING_UP = auto()
+    BACKING_UP = auto() # Maybe delete? - 
     TURNING = auto()
     RESUMING = auto()
 
-
+#Se på logikken med obstacle detected og metal detected!
 class AutonomousController(Node):
     def __init__(self):
         super().__init__("autonomous_controller_node")
@@ -127,7 +127,7 @@ class AutonomousController(Node):
         self.recovery_substate = substate
         self.substate_entered_at = self.get_clock().now()
         if substate == RecoverySubState.TURNING:
-            self.turn_duration_s = random.uniform(RECOVERY_TURN_MIN_S, RECOVERY_TURN_MAX_S)
+            self.turn_duration_s = random.uniform(RECOVERY_TURN_MIN_S, RECOVERY_TURN_MAX_S) # Fix to work for accurate imu sensor input
 
     def elapsed_in_state(self):
         return (self.get_clock().now() - self.state_entered_at).nanoseconds / 1e9
@@ -247,6 +247,17 @@ class AutonomousController(Node):
             return -math.pi / 2.0
         return math.asin(sinp)
 
+
+#### Shutdown sequence ####
+    def destroy_node(self):
+        if hasattr(self, "i2c") and hasattr(self.i2c, "deinit"):
+            self.i2c.deinit()
+        super().destroy_node()
+    
+    def shutdown_callback(self, msg):
+        if msg.data.strip().lower() == "shutdown":
+            self.get_logger().info("Shutdown signal received. Shutting down AutonomousController node.")
+            rclpy.shutdown()
 
 def main(args=None):
     rclpy.init(args=args)
