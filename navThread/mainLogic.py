@@ -208,21 +208,31 @@ class MainLogicNode(Node):
 
         ### Main commands for moving the rover
         if cmd == "forward":
+            if self.locomotion_mode == LocomotionModes.CRABBING:
+            self.controller.crab_straight()
+
             self.controller.forward()
             self.get_logger().info("Moving forward")
 
         elif cmd == "backward":
-            self.controller.backward()
-            self.get_logger().info("Moving backward")
+            if self.locomotion_mode == LocomotionModes.CRABBING:
+                self.controller.crab_straight()
+
+                self.controller.backward()
+                self.get_logger().info("Moving backward")
 
         elif cmd == "stop":
             self.controller.stop()
             self.get_logger().info("Stopping rover")
 
-        elif cmd == "left_turn": 
-            if len(parts) != 1:
-                self.get_logger().warn("Input type required: left_turn")
-                return
+        elif cmd == "left_turn":
+            if self.locomotion_mode == LocomotionModes.CRABBING:
+                self.controller.crab_sideways()
+                self.controller.backward()
+                self.get_logger().info("Crabbing left")
+            else:
+                self.controller.left_turn()
+                self.get_logger().info("Turning left")
 
             # try:
             #     turn_angle = int(parts[1])
@@ -234,14 +244,17 @@ class MainLogicNode(Node):
             #     return
             
             # Need to fix stearing for different modes.
-            self.controller.left_turn()
-            self.get_logger().info("Turning left")
+
             # self.get_logger().info("Turning left " + str(turn_angle) + " degrees. ")
 
-        elif cmd == "right_turn":  
-            if len(parts) != 1:
-                self.get_logger().warn("Input type required: right_turn")
-                return
+        elif cmd == "right_turn":
+            if self.locomotion_mode == LocomotionModes.CRABBING:
+                self.controller.crab_sideways()
+                self.controller.forward()
+                self.get_logger().info("Crabbing right")
+            else:
+                self.controller.right_turn()
+                self.get_logger().info("Turning right")
 
             # try:
             #     turn_angle = int(parts[1])
@@ -253,8 +266,8 @@ class MainLogicNode(Node):
             #     return
 
             # Example angle, adjust as needed
-            self.controller.right_turn()
-            self.get_logger().info("Turning right")
+            #self.controller.right_turn()
+            #self.get_logger().info("Turning right")
             #self.get_logger().info("Turning right " + str(turn_angle) + " degrees. ")
 
 
