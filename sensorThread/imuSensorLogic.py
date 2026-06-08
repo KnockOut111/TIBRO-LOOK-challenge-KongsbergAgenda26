@@ -3,7 +3,7 @@ from rclpy.node import Node
 from rclpy.executors import ExternalShutdownException
 
 import math
-
+import time
 import board
 import busio
 import adafruit_mpu6050
@@ -17,6 +17,11 @@ from geometry_msgs.msg import Quaternion
 class ImuSensorNode(Node):
     def __init__(self):
         super().__init__("imu_sensor_node")
+
+        # For calibration
+        self.gyro_bias = {}
+        self.accel_bias = {}
+        self.calibrated = False
 
         # callback for shutdown
         self.create_subscription( 
@@ -70,12 +75,30 @@ class ImuSensorNode(Node):
                 "last_stamp": None,
             }
 
-        self.timer = self.create_timer(1.0 / rate, self.publish_imus)
+        # Calibrate all IMUs before publishing
+        self.imu_calibration()
+
+        # Start publishing after calibration completes
+        self.timer = self.create_timer(
+        1.0 / rate,
+        self.publish_imus
+        )
 
     def publish_imus(self):
         for addr, imu in self.imus.items():
             ax, ay, az = imu.acceleration
             gx, gy, gz = imu.gyro
+
+            if self.calibrated:
+                bx, by, bz = self.gyro_bias[addr]
+                gx -= bx
+                gy -= by
+                gz -= bz
+
+                bax, bay, baz = self.accel_bias[addr]
+                ax -= bax
+                ay -= bay
+                az -= baz
 
             # self.get_logger().info(f"acceleration: {ax, ay, az}")
             # self.get_logger().info(f"gyro: {gx, gy, gz}")
@@ -188,6 +211,60 @@ class ImuSensorNode(Node):
         if msg.data.strip().lower() == "shutdown":
             self.get_logger().info("Shutdown signal received. Shutting down IMU sensor node.")
             rclpy.shutdown()
+    def imu_calibration(self, samples=500, delay=0.005):
+        self.get_logger().info(
+            "Waiting 2 seconds for IMUs to stabilize..."
+            )
+        time.sleep(2.0)
+
+        self.get_logger().info(
+            "Starting IMU calibration. Keep rover still."
+        )
+
+        for addr, imu in self.imus.items():
+            gx_sum = gy_sum = gz_sum = 0.0
+            ax_sum = ay_sum = az_sum = 0.0
+
+            for _ in range(samples):
+                ax, ay, az = imu.acceleration
+                gx, gy, gz = imu.gyro
+
+                ax_sum += ax
+                ay_sum += ay
+                az_sum += az
+
+                gx_sum += gx
+                gy_sum += gy
+                gz_sum += gz
+
+                time.sleep(delay)
+
+            self.gyro_bias[addr] = (
+                gx_sum / samples,
+                gy_sum / samples,
+                gz_sum / samples,
+            )
+
+            self.accel_bias[addr] = (
+                ax_sum / samples,
+                ay_sum / samples,
+                (az_sum / samples) - 9.81  # remove gravity
+            )
+
+            self.get_logger().info(
+                f"Calibration done for {hex(addr)}: "
+                f"gyro={self.gyro_bias[addr]}, accel={self.accel_bias[addr]}"
+            )
+
+        for state in self.orientation_states.values():
+            state["roll"] = 0.0
+            state["pitch"] = 0.0
+            state["yaw"] = 0.0
+            state["last_stamp"] = None
+
+        self.calibrated = True
+        self.get_logger().info("IMU calibration complete.")
+
 
 
 def main(args=None):
