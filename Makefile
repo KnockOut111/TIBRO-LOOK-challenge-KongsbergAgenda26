@@ -133,3 +133,17 @@ depth-camera-clean:
 depth-camera-logs:
 	docker compose -f docker-compose.yml logs -f realsense_camera_thread depth_camera_thread
 
+# PiCam ROS2 hardware targets
+picam-build:
+	docker compose -f docker-compose.yml up -d --build picam_thread
+	docker compose -f docker-compose.yml logs -f picam_thread
+
+picam-restart:
+	docker compose -f docker-compose.yml restart picam_thread
+
+picam-stop:
+	docker compose -f docker-compose.yml stop picam_thread
+
+picam-logs:
+	docker compose -f docker-compose.yml logs -f picam_thread
+

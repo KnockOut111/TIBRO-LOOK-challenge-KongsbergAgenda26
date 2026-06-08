@@ -91,6 +91,20 @@ services:
         - PYTHONPATH=/app
         - BLINKA_FORCECHIP=BCM2XXX
       command: python3 -u manualcommands.py
+  picam_thread:
+    platform: linux/arm64
+    build:
+      context: .
+      dockerfile: picam_server/Dockerfile
+    container_name: roverpi-picam_thread
+    privileged: true
+    network_mode: host
+    volumes:
+      - ./picam_server:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+    command: bash -lc "source /opt/ros/jazzy/setup.bash && python3 -u picamThread.py"
 
 # IMU Possibly also wheel odometry data, but currently not implemented. Missing encoders for this to work?
   # imu_sensor_thread:
