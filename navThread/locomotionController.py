@@ -176,8 +176,6 @@ class LocomotionController():
         for wheel, angle in target_angles.items():
             self.set_wheel_steering(wheel, angle)
 
-        if self.locomo
-
         #Motion: Fix so that only rear and front wheels turn in opposite direction, the middle ones must be still.
 
     # Only pointed forward or 90 deg sideways.
