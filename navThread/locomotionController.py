@@ -40,10 +40,10 @@ class LocomotionController():
 
         self.steering_neutral = {
             SteeringServos.FL: 75,
-            SteeringServos.FR: 50,
+            SteeringServos.FR: 100,
             SteeringServos.CL: 105,
             SteeringServos.CR: 70,
-            SteeringServos.RL: 105,
+            SteeringServos.RL: 50,
             SteeringServos.RR: 80,
         }
 
