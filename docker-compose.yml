@@ -74,6 +74,23 @@ services:
       - BLINKA_FORCECHIP=BCM2XXX
     command: python3 -u imuSensorLogic.py
 
+
+  manual_command_thread:
+      platform: linux/arm64
+      build:
+        context: .
+        dockerfile: manualCommandThread/Dockerfile
+      container_name: roverpi-manual_command_thread
+      privileged: true
+
+      volumes:
+        - ./manualCommandThread:/app
+      environment:
+        - PYTHONUNBUFFERED=1
+        - PYTHONPATH=/app
+        - BLINKA_FORCECHIP=BCM2XXX
+      command: python3 -u manualcommands.py
+
 # IMU Possibly also wheel odometry data, but currently not implemented. Missing encoders for this to work?
   # imu_sensor_thread:
   #   build: .
