@@ -115,20 +115,21 @@ services:
       hole_filling_filter.enable:=true"
 
 # Converts RealSense depth image into LaserScan and obstacle messages.
-  depth_camera_thread:
-    platform: linux/arm64
-    build:
-      context: .
-      dockerfile: mappingThread-Local/Dockerfile
-    container_name: roverpi-depth_camera_thread
-    network_mode: host
-    volumes:
-      - ./mappingThread-Local/stereocamera:/app
-    working_dir: /app
-    environment:
-      - PYTHONUNBUFFERED=1
-      - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
-    command: python3 -u depthCameraNode.py
+  # depth_camera_thread:
+  #   platform: linux/arm64
+  #   build:
+  #     context: .
+  #     dockerfile: mappingThread-Local/Dockerfile
+  #   container_name: roverpi-depth_camera_thread
+  #   network_mode: host
+  #   volumes:
+  #     - ./mappingThread-Local/stereocamera:/app
+  #   working_dir: /app
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
+  #   command: python3 -u depthCameraNode.py
+
 
 # Running Visual SLAM, estimating the position (pose) of the rover and building a map of the environment. 
   # mapping_thread:
