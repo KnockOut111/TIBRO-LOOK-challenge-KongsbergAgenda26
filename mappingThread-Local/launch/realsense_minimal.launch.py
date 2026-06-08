@@ -10,16 +10,22 @@ def generate_launch_description():
             name="camera",
             namespace="camera",
             parameters=[{
-                "enable_color": True,
+                # D421: depth/infra, no RGB
+                "enable_color": False,
                 "enable_depth": True,
-                "enable_infra1": False,
-                "enable_infra2": False,
-                "pointcloud.enable": False,
-                "align_depth.enable": False,
+                "enable_infra1": True,
+                "enable_infra2": True,
 
-                # Conservative. Increase when USB3 is available.
-                "rgb_camera.color_profile": "424x240x6",
-                "depth_module.depth_profile": "424x240x6",
+                # Not needed for stereo odometry
+                "align_depth.enable": False,
+                "pointcloud.enable": False,
+
+                # Conservative stable profile
+                "depth_module.depth_profile": "640x480x15",
+                "depth_module.infra_profile": "640x480x15",
+
+                "enable_sync": True,
+                "clip_distance": 5.0,
             }],
             output="screen",
         ),
