@@ -2,12 +2,16 @@ FROM ros:jazzy-ros-base
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    python3-pip \
-    python3-opencv \
-    python3-numpy \
-    python3-picamera2 \
-    libcamera-tools \
+RUN apt-get \
+    -o Acquire::Check-Date=false \
+    -o Acquire::Check-Valid-Until=false \
+    update && \
+    apt-get install -y \
+        python3-pip \
+        python3-opencv \
+        python3-numpy \
+        python3-picamera2 \
+        libcamera-tools \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --break-system-packages --no-cache-dir picamzero
