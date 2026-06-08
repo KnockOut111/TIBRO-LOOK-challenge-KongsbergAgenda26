@@ -1,0 +1,14 @@
+.git
+__pycache__
+*.pyc
+venv
+.venv
+build
+install
+log
+*.bag
+*.db3
+*.mp4
+*.avi
+*.png
+*.jpg

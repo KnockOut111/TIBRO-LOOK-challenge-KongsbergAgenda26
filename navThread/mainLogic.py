@@ -48,24 +48,24 @@ class MainLogicNode(Node):
 
 ########### Time functions ################################################################
     ### Timer management functions ###
-    def start_timer(self, name: str, delay_seconds: float, callback: Callable[[], None]) -> None:
-        self.cancel_timer(name)
+    # def start_timer(self, name: str, delay_seconds: float, callback: Callable[[], None]) -> None:
+    #     self.cancel_timer(name)
 
-        def timer_wrapper() -> None:
-            self.cancel_timer(name)
-            callback()
+    #     def timer_wrapper() -> None:
+    #         self.cancel_timer(name)
+    #         callback()
 
-        self.active_timers[name] = self.create_timer(delay_seconds, timer_wrapper)
+    #     self.active_timers[name] = self.create_timer(delay_seconds, timer_wrapper)
 
-    def cancel_timer(self, name: str) -> None:
-        timer = self.active_timers.pop(name, None)
-        if timer is not None:
-            timer.cancel()
+    # def cancel_timer(self, name: str) -> None:
+    #     timer = self.active_timers.pop(name, None)
+    #     if timer is not None:
+    #         timer.cancel()
 
-    def cancel_all_timers(self) -> None:
-        for timer in self.active_timers.values():
-            timer.cancel()
-        self.active_timers.clear()
+    # def cancel_all_timers(self) -> None:
+    #     for timer in self.active_timers.values():
+    #         timer.cancel()
+    #     self.active_timers.clear()
 
 
 ########### Main init function ################################################################
@@ -128,7 +128,7 @@ class MainLogicNode(Node):
             shutdown_msg.data = "shutdown"
             self.shutdown_pub.publish(shutdown_msg)
 
-            self.cancel_all_timers()
+            # self.cancel_all_timers()
             rclpy.shutdown()
 
         else:
@@ -314,6 +314,8 @@ class MainLogicNode(Node):
         else:
             self.get_logger().warn(f"Unknown command: {command}")
 
+    def destroy_node(self):
+        super().destroy_node()
 
 def main(args=None):
     rclpy.init(args=args)
@@ -326,9 +328,10 @@ def main(args=None):
         pass
 
     finally:
-        mainLogic_node.cancel_all_timers()
+        # mainLogic_node.cancel_all_timers()
         mainLogic_node.controller.stop()
 
+        node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
 

@@ -92,17 +92,6 @@ services:
         - BLINKA_FORCECHIP=BCM2XXX
       command: python3 -u manualcommands.py
 
-# IMU Possibly also wheel odometry data, but currently not implemented. Missing encoders for this to work?
-  # imu_sensor_thread:
-  #   build: .
-  #   container_name: roverpi-imu_sensor_thread
-  #   privileged: true
-  #   devices:
-  #     - /dev/i2c-1:/dev/i2c-1
-  #   volumes:
-  #     - .:/app
-  #   working_dir: /app
-  #   command: python imuSensorThread.py  # Needs to set what is to run when the container starts, otherwise it will just run the default command which is to start a bash terminal
 
 # RealSense D421 wrapper. Publishes standard depth/IR/image topics and services.
   realsense_camera_thread:
@@ -131,6 +120,10 @@ services:
       spatial_filter.enable:=true
       temporal_filter.enable:=true
       hole_filling_filter.enable:=true"
+
+
+
+
 
 # Converts RealSense depth image into LaserScan and obstacle messages.
   # depth_camera_thread:
