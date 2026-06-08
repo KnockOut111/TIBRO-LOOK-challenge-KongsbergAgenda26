@@ -34,6 +34,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/app
+      - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
     command: python3 -u autonomousController_node.py
 
   metal_sensor_thread:

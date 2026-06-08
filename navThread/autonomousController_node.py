@@ -71,7 +71,7 @@ class AutonomousController(Node):
         # tick loop
         self.tick_timer = self.create_timer(TICK_PERIOD_S, self.tick)
 
-        self.get_logger().info("AutonomousController (brain) running. Waiting for arm + start.")
+        self.get_logger().info("AutonomousController running. Waiting for arm + start.")
 
         # callbacks
     def imu_callback(self, msg):
@@ -87,6 +87,7 @@ class AutonomousController(Node):
 
     def main_mode_callback(self, msg):
         mode = msg.data.strip().lower()
+        self.get_logger().info(f"arm received: {mode}")
         if mode == "arm":
             self.is_armed = True
         elif mode == "quit":
@@ -103,11 +104,6 @@ class AutonomousController(Node):
                 self.get_logger().warn(f"Start trigger ignored: already in {self.current_state.name}.")
                 return
             self.transition(RoverState.STARTING)
-
-    def shutdown_callback(self, msg):
-        if msg.data.strip().lower() == "shutdown":
-            self.get_logger().info("Shutdown received.")
-            rclpy.shutdown()
 
     # FSM helpers
     def transition(self, new_state):
@@ -247,8 +243,6 @@ class AutonomousController(Node):
 
 #### Shutdown sequence ####
     def destroy_node(self):
-        if hasattr(self, "i2c") and hasattr(self.i2c, "deinit"):
-            self.i2c.deinit()
         super().destroy_node()
     
     def shutdown_callback(self, msg):
