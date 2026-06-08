@@ -2,7 +2,7 @@ FROM ros:jazzy-ros-base
 
 WORKDIR /app
 
-COPY navThread/requirements.txt .
+COPY requirements.txt .
 
 RUN apt-get -o Acquire::Check-Date=false \
             -o Acquire::Check-Valid-Until=false \
@@ -16,7 +16,7 @@ RUN apt-get -o Acquire::Check-Date=false \
 
 RUN pip3 install --break-system-packages --no-cache-dir -r requirements.txt
 
-COPY navThread/ /app/
+COPY . /app/
 
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1

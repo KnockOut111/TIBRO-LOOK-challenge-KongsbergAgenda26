@@ -1,0 +1,51 @@
+[1mdiff --git a/Makefile b/Makefile[m
+[1mindex c3d596c..b11ddfe 100644[m
+[1m--- a/Makefile[m
+[1m+++ b/Makefile[m
+[36m@@ -147,3 +147,21 @@[m [mpicam-stop:[m
+ picam-logs:[m
+ 	docker compose -f docker-compose.yml logs -f picam_thread[m
+ [m
+[32m+[m[32m# PiCam detect server (PC-side) targets[m
+[32m+[m[32mpicam-detect-build:[m
+[32m+[m	[32mdocker compose -f docker-compose.yml up -d --build picam_detect_server[m
+[32m+[m	[32mdocker compose -f docker-compose.yml logs -f picam_detect_server[m
+[32m+[m
+[32m+[m[32mpicam-detect-restart:[m
+[32m+[m	[32mdocker compose -f docker-compose.yml restart picam_detect_server[m
+[32m+[m
+[32m+[m[32mpicam-detect-stop:[m
+[32m+[m	[32mdocker compose -f docker-compose.yml stop picam_detect_server[m
+[32m+[m
+[32m+[m[32mpicam-detect-clean:[m
+[32m+[m	[32mdocker compose stop picam_detect_server[m
+[32m+[m	[32mdocker compose rm -f picam_detect_server[m
+[32m+[m
+[32m+[m[32mpicam-detect-logs:[m
+[32m+[m	[32mdocker compose -f docker-compose.yml logs -f picam_detect_server[m
+[32m+[m
+[1mdiff --git a/docker-compose.yml b/docker-compose.yml[m
+[1mindex 3bf2204..f99dee4 100644[m
+[1m--- a/docker-compose.yml[m
+[1m+++ b/docker-compose.yml[m
+[36m@@ -107,6 +107,20 @@[m [mservices:[m
+       - FASTDDS_BUILTIN_TRANSPORTS=UDPv4[m
+     command: bash -lc "source /opt/ros/jazzy/setup.bash && python3 -u picamThread.py"[m
+ [m
+[32m+[m[32m  picam_detect_server:[m
+[32m+[m[32m    build:[m
+[32m+[m[32m      context: .[m
+[32m+[m[32m      dockerfile: picam_server/Dockerfile.server[m
+[32m+[m[32m    container_name: roverpi-picam_detect_server[m
+[32m+[m[32m    network_mode: host[m
+[32m+[m[32m    volumes:[m
+[32m+[m[32m      - ./picam_server:/app[m
+[32m+[m[32m    environment:[m
+[32m+[m[32m      - PYTHONUNBUFFERED=1[m
+[32m+[m[32m      - PYTHONPATH=/app[m
+[32m+[m[32m      - FASTDDS_BUILTIN_TRANSPORTS=UDPv4[m
+[32m+[m[32m    command: bash -lc "source /opt/ros/jazzy/setup.bash && python3 -u app_detect.py"[m
+[32m+[m
+ # RealSense D421 wrapper. Publishes standard depth/IR/image topics and services.[m
+   realsense_camera_thread:[m
+     platform: linux/arm64[m
