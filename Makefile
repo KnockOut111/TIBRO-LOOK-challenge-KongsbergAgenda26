@@ -3,6 +3,12 @@
 # It also makes it easier to run the system on different machines without having to remember all the different commands.
 
 ### MAIN COMMANDS ###
+
+roverpi-manual-mode-build:
+	docker compose -f docker-compose.yml up -d --build manual_command_thread
+	docker compose -f docker-compose.yml logs -f manual_command_thread
+	docker compose -f docker-compose.yml up -d --build nav_thread
+	docker compose -f docker-compose.yml logs -f nav_thread
 roverpi-startsys:
 	docker compose -f docker-compose.yml build
 	docker compose -f docker-compose.yml up -d
@@ -128,3 +134,4 @@ depth-camera-clean:
 
 depth-camera-logs:
 	docker compose -f docker-compose.yml logs -f realsense_camera_thread depth_camera_thread
+
