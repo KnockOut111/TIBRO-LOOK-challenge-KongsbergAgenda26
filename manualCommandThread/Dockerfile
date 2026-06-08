@@ -8,6 +8,6 @@ RUN apt-get -o Acquire::Check-Date=false \
     apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
-COPY manualCommandThread/ /app/
+COPY . /app/
 
 CMD ["bash", "-lc", "source /opt/ros/jazzy/setup.bash && python3 -u manualcommands.py"]
