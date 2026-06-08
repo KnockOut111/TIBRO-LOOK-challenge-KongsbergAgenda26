@@ -94,6 +94,7 @@ class AutonomousController(Node):
             self.transition(RoverState.STOPPED)
 
     def start_program_callback(self, msg):
+        self.get_logger().info("Starting program callback")
         if msg == "start_autonomous_system":
             if not self.is_armed:
                 self.get_logger().warn("Start trigger ignored: rover not armed.")
