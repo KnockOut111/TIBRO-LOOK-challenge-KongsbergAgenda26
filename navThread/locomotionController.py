@@ -114,12 +114,26 @@ class LocomotionController():
     def crab_straight(self):
         self.reset_to_neutral()
 
+    #def crab_sideways(self):
+        #for wheel, neutral_angle in self.steering_neutral.items():
+            #if neutral_angle <= 90:
+                #self.set_wheel_steering(wheel, neutral_angle + 90)
+            #else:
+                #self.set_wheel_steering(wheel, neutral_angle - 90)
+
     def crab_sideways(self):
-        for wheel, neutral_angle in self.steering_neutral.items():
-            if neutral_angle <= 90:
-                self.set_wheel_steering(wheel, neutral_angle + 90)
-            else:
-                self.set_wheel_steering(wheel, neutral_angle - 90)
+        target_angles = {
+            SteeringServos.FL: self.steering_neutral[SteeringServos.FL] + 90,
+            SteeringServos.CL: self.steering_neutral[SteeringServos.CL] - 90,
+            SteeringServos.RL: self.steering_neutral[SteeringServos.RL] - 90,
+
+            SteeringServos.FR: self.steering_neutral[SteeringServos.FR] - 90,
+            SteeringServos.CR: self.steering_neutral[SteeringServos.CR] + 90,
+            SteeringServos.RR: self.steering_neutral[SteeringServos.RR] + 90,
+        }
+
+    for wheel, angle in target_angles.items():
+        self.set_wheel_steering(wheel, angle)
 
     # Setting one wheel to a given angle
     def set_wheel_steering(self, wheel: SteeringServos, angle: int):
