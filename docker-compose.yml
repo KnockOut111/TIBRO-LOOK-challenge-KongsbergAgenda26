@@ -3,9 +3,9 @@
 services:
   nav_thread:
     platform: linux/arm64
-    build: 
-      context: .
-      dockerfile: navThread/Dockerfile
+    build:
+      context: ./navThread
+      dockerfile: Dockerfile
     container_name: roverpi-nav_thread
     privileged: true
     devices:
@@ -24,8 +24,8 @@ services:
  
   autonomous_controller_thread:
     build:
-      context: .
-      dockerfile: navThread/Dockerfile
+      context: ./autonomous_controller_thread
+      dockerfile: /Dockerfile
     container_name: roverpi-autonomous_controller_thread
     network_mode: host
     volumes:
@@ -58,8 +58,8 @@ services:
   imu_sensor_thread:
     platform: linux/arm64
     build:
-      context: .
-      dockerfile: sensorThread/Dockerfile
+      context: ./sensorThread
+      dockerfile: Dockerfile
     container_name: roverpi-imu_sensor_thread
     privileged: true
     devices:
@@ -94,8 +94,8 @@ services:
   picam_thread:
     platform: linux/arm64
     build:
-      context: .
-      dockerfile: picam_server/Dockerfile
+      context: ./picam_server
+      dockerfile: Dockerfile
     container_name: roverpi-picam_thread
     privileged: true
     network_mode: host

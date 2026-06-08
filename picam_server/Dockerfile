@@ -10,11 +10,13 @@ RUN apt-get \
         python3-pip \
         python3-opencv \
         python3-numpy \
-        python3-picamera2 \
         libcamera-tools \
+        python3-libcamera \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --break-system-packages --no-cache-dir picamzero
+RUN pip3 install --break-system-packages --no-cache-dir \
+    picamera2 \
+    picamzero
 
 COPY picam_server/ /app/
 
