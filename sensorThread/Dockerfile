@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     libgpiod-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY sensorThread/requirements.txt .
+COPY requirements.txt .
 RUN pip install --break-system-packages --no-cache-dir -r requirements.txt
 COPY . .
 
