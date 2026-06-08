@@ -34,7 +34,7 @@ class ImuSensorNode(Node):
         self.get_logger().info("IMU sensor node started")
 
         self.declare_parameter("addresses", [0x68, 0x69])
-        self.declare_parameter("publish_rate_hz", 50.0)
+        self.declare_parameter("publish_rate_hz", 10.0)
         self.declare_parameter("estimate_orientation", True)
         self.declare_parameter("orientation_filter_alpha", 0.98)
     
@@ -115,10 +115,10 @@ class ImuSensorNode(Node):
                 msg.orientation = self.estimate_orientation_from_imu(
                     addr, ax, ay, az, gx, gy, gz
                 )
-                # self.get_logger().info(f"Estimated orientatio x {msg.orientation.x}")
-                # self.get_logger().info(f"Estimated orientation y {msg.orientation.y}")
-                # self.get_logger().info(f"Estimated orientation z {msg.orientation.z}")
-                # self.get_logger().info(f"Estimated orientation w {msg.orientation.w}")
+                 self.get_logger().info(f"Estimated orientatio x {msg.orientation.x}")
+                 self.get_logger().info(f"Estimated orientation y {msg.orientation.y}")
+                 self.get_logger().info(f"Estimated orientation z {msg.orientation.z}")
+                 self.get_logger().info(f"Estimated orientation w {msg.orientation.w}")
 
 
 
@@ -211,6 +211,7 @@ class ImuSensorNode(Node):
         if msg.data.strip().lower() == "shutdown":
             self.get_logger().info("Shutdown signal received. Shutting down IMU sensor node.")
             rclpy.shutdown()
+            
     def imu_calibration(self, samples=500, delay=0.005):
         self.get_logger().info(
             "Waiting 2 seconds for IMUs to stabilize..."
