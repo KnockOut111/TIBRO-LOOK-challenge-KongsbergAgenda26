@@ -111,7 +111,7 @@ class LocomotionController():
 
 
     def crab_straight(self):
-    self.reset_to_neutral()
+        self.reset_to_neutral()
 
     def crab_sideways(self):
         for wheel, neutral_angle in self.steering_neutral.items():
