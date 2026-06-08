@@ -10,6 +10,9 @@ class DepthObstacleNode(Node):
     def __init__(self):
         super().__init__("depth_obstacle_node")
 
+        #Defining subscribers
+        self.create_subscription( String, "/rover/system_shutdown", self.shutdown_callback, 10)
+
         self.declare_parameter("depth_topic", "/camera/camera/depth/image_rect_raw")
         self.declare_parameter("obstacle_topic", "/sensors/obstacle_state")
         self.declare_parameter("stop_distance_m", 0.8)
@@ -64,14 +67,27 @@ class DepthObstacleNode(Node):
             self.last_state = state
             self.get_logger().info(f"State change: {state} at {distance:.3f} m")
 
+#### Shutdown sequence ####
+    def destroy_node(self):
+        if hasattr(self, "i2c") and hasattr(self.i2c, "deinit"):
+            self.i2c.deinit()
+        super().destroy_node()
+    
+    def shutdown_callback(self, msg):
+        if msg.data.strip().lower() == "shutdown":
+            self.get_logger().info("Shutdown signal received. Shutting down AutonomousController node.")
+            rclpy.shutdown()
 
 def main(args=None):
     rclpy.init(args=args)
     node = DepthObstacleNode()
     try:
         rclpy.spin(node)
+    except ExternalShutdownException:
+        pass
     except KeyboardInterrupt:
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()

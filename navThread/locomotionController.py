@@ -169,8 +169,8 @@ class LocomotionController():
             SteeringServos.FR: 135,
             SteeringServos.CL: 90,
             SteeringServos.CR: 90,
-            SteeringServos.RL: 135,
-            SteeringServos.RR: 45,
+            SteeringServos.RL: 130,
+            SteeringServos.RR: 40,
         } #Check if angles is on right servo pos
 
         for wheel, angle in target_angles.items():
