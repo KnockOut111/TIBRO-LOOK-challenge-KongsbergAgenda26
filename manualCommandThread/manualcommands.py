@@ -4,6 +4,7 @@
 # pil høyre    -> right_turn
 # space        -> stop
 # a            -> arm
+# m            -> change locomotion mode
 # q            -> quit
 
 import rclpy
@@ -21,13 +22,18 @@ class ManualCommandNode(Node):
 
         self.main_mode_pub = self.create_publisher(String, "/rover/mainMode", 10)
         self.command_pub = self.create_publisher(String, "/rover/command", 10)
-        
+        self.loco_mode_pub = self.create_publisher(String, "/rover/locoMode", 10)
+
         self.create_subscription(String, "/rover/system_shutdown", self.shutdown_callback, 10)
 
+        # Start in crabbing mode
+        self.modes = ["crabbing", "ackermann 30", "point_turn"]
+        self.mode_index = 0
+        self.current_mode = self.modes[self.mode_index]
+
         self.get_logger().info("Manual command node running")
-        self.get_logger().info("Controls: arrows = drive, space = stop, a = arm, q = quit")
-
-
+        self.get_logger().info("Controls: arrows = drive, space = stop, a = arm, m = mode, q = quit")
+        self.get_logger().info(f"Starting locomotion mode: {self.current_mode}")
 
     def publish_main_mode(self, command: str):
         msg = String()
@@ -38,6 +44,11 @@ class ManualCommandNode(Node):
         msg = String()
         msg.data = command
         self.command_pub.publish(msg)
+
+    def publish_loco_mode(self, command: str):
+        msg = String()
+        msg.data = command
+        self.loco_mode_pub.publish(msg)
 
     def get_key(self):
         fd = sys.stdin.fileno()
@@ -55,7 +66,17 @@ class ManualCommandNode(Node):
 
         return key
 
+    def change_mode(self):
+        self.mode_index = (self.mode_index + 1) % len(self.modes)
+        self.current_mode = self.modes[self.mode_index]
+
+        self.publish_loco_mode(self.current_mode)
+        self.get_logger().info(f"Changed locomotion mode to: {self.current_mode}")
+
     def run(self):
+        # Set initial locomotion mode when node starts
+        self.publish_loco_mode(self.current_mode)
+
         while rclpy.ok():
             key = self.get_key()
 
@@ -83,15 +104,18 @@ class ManualCommandNode(Node):
                 self.publish_main_mode("arm")
                 self.get_logger().info("Armed")
 
+            elif key == "m":
+                self.change_mode()
+
             elif key == "q":
                 self.publish_command("stop")
                 self.publish_main_mode("quit")
                 self.get_logger().info("Quit")
                 break
-        
+
     def shutdown_callback(self, msg):
         if msg.data.strip().lower() == "shutdown":
-            self.get_logger().info("Shutdown signal received. Shutting down metal sensor node...")
+            self.get_logger().info("Shutdown signal received. Shutting down manual command node...")
             rclpy.shutdown()
 
 
