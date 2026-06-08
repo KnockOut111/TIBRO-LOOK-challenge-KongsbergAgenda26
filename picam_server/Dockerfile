@@ -11,11 +11,12 @@ RUN apt-get \
         python3-opencv \
         python3-numpy \
         python3-flask \
+        python3-picamera2 \
         libcamera-tools \
         libcap-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --break-system-packages --no-cache-dir picamera2 picamzero
+RUN pip3 install --break-system-packages --no-cache-dir --no-deps picamzero
 
 COPY . .
 
