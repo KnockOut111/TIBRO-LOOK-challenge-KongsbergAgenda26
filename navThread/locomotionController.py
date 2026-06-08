@@ -202,22 +202,11 @@ class LocomotionController():
 
         for wheel, angle in target_angles.items():
             self.set_wheel_steering(wheel, angle)
-<<<<<<< Updated upstream
-    
-    def point_turn_left(self):
-        self.point_turn()
-        self.set_drive(self.LEFT_BACKWARD, self.RIGHT_FORWARD)
-
-    def point_turn_right(self):
-        self.point_turn()
-        self.set_drive(self.LEFT_FORWARD, self.RIGHT_BACKWARD)
-=======
         
         if self.pointTurn_left_bool == True:
             self.forward_pointTurn_left()
         elif self.pointTurn_right_bool == True:
             self.forward_pointTurn_right()
->>>>>>> Stashed changes
 
 
     # Only pointed forward or 90 deg sideways.
