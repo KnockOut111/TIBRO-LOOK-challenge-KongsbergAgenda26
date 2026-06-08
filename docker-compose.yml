@@ -104,8 +104,8 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/app
+      - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
     command: bash -lc "source /opt/ros/jazzy/setup.bash && python3 -u picamThread.py"
-
 
 # RealSense D421 wrapper. Publishes standard depth/IR/image topics and services.
   realsense_camera_thread:
