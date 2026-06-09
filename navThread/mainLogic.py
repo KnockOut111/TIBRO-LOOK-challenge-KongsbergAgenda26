@@ -77,7 +77,7 @@ class MainLogicNode(Node):
         self.wheel_calibration()
         self.camera1_calibration()
         self.camera2_calibration()
-        self.imu_calibration()
+        #self.imu_calibration()
         self.get_logger().info("Initializing of tibro-roverPi is completed")
 
 
