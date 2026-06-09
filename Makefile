@@ -5,14 +5,14 @@
 
 
 aut-build:
-docker compose up -d --build rover_autonomous
+	docker compose up -d --build rover_autonomous
 
 aut-start:
-docker compose up -d rover_autonomous
-docker compose logs -f
+	docker compose up -d rover_autonomous
+	docker compose logs -f rover_autonomous
 
 aut-stop:
-docker compose stop rover_autonomous
+	docker compose stop rover_autonomous
 
 
 ### MAIN COMMANDS ###
