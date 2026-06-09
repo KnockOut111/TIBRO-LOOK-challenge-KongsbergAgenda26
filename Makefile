@@ -2,6 +2,19 @@
 # This file creates a more user-friendly way to run the system.
 # It also makes it easier to run the system on different machines without having to remember all the different commands.
 
+
+
+aut-build:
+docker compose up -d --build rover_autonomous
+
+aut-start:
+docker compose up -d rover_autonomous
+docker compose logs -f
+
+aut-stop:
+docker compose stop rover_autonomous
+
+
 ### MAIN COMMANDS ###
 
 roverpi-manual-mode-build:
