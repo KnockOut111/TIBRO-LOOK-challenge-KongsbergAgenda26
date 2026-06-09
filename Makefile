@@ -164,5 +164,3 @@ picam-detect-clean:
 
 picam-detect-logs:
 	docker compose -f docker-compose-server.yml logs -f picam_detect_server
-
-#############################

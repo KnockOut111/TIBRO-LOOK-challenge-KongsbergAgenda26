@@ -29,7 +29,7 @@ services:
     container_name: roverpi-autonomous_controller_thread
     network_mode: host
     volumes:
-      - ./navThread:/app
+      - ./autonomousControllerThread:/app
     working_dir: /app
     environment:
       - PYTHONUNBUFFERED=1
@@ -125,8 +125,12 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
-    command: >
-      bash -lc "source /opt/ros/jazzy/setup.bash && ros2 launch realsense2_camera rs_launch.py"
+    command:
+    - bash
+    - -lc
+    - >
+      source /opt/ros/jazzy/setup.bash &&
+      ros2 launch realsense2_camera rs_launch.py
       camera_namespace:=camera
       camera_name:=camera
       depth_module.depth_profile:=640x480x15
@@ -137,7 +141,7 @@ services:
       pointcloud.enable:=true
       spatial_filter.enable:=true
       temporal_filter.enable:=true
-      hole_filling_filter.enable:=true"
+      hole_filling_filter.enable:=true
 
 
 
