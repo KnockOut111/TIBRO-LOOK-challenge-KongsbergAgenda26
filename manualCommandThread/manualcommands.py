@@ -27,7 +27,7 @@ class ManualCommandNode(Node):
         self.create_subscription(String, "/rover/system_shutdown", self.shutdown_callback, 10)
 
         # Start in crabbing mode
-        self.modes = ["crabbing", "ackermann 30", "point_turn"]
+        self.modes = ["crabbing", "point_turn"]
         self.mode_index = 0
         self.current_mode = self.modes[self.mode_index]
 
