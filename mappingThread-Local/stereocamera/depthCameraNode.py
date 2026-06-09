@@ -1,6 +1,7 @@
 import numpy as np
 import rclpy
 from rclpy.node import Node
+from rclpy.executors import ExternalShutdownException
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
@@ -12,6 +13,9 @@ class DepthObstacleNode(Node):
 
         #Defining subscribers
         self.create_subscription( String, "/rover/system_shutdown", self.shutdown_callback, 10)
+
+        self.obsticle_detected_pub = self.create_publisher(String, "/sensors/obstacle_detected", 10)
+
 
         self.declare_parameter("depth_topic", "/camera/camera/depth/image_rect_raw")
         self.declare_parameter("obstacle_topic", "/sensors/obstacle_state")

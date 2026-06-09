@@ -206,7 +206,7 @@ class LocomotionController():
     # Only turn on the spot, so need only to know how long to turn or how many rounds wheels need to turn
     def point_turn(self):
         target_angles = {
-            SteeringServos.FL: 135,
+            SteeringServos.FL: 140,
             SteeringServos.FR: 45,
             SteeringServos.CL: 90,
             SteeringServos.CR: 90,

@@ -41,8 +41,8 @@ services:
   metal_sensor_thread:
     platform: linux/arm64
     build:
-      context: .
-      dockerfile: metalSensorThread/Dockerfile
+      context: ./metalSensorThread
+      dockerfile: Dockerfile
     container_name: roverpi-metal_sensor_thread
     privileged: true
     network_mode: host
@@ -79,9 +79,10 @@ services:
 
   manual_command_thread:
       platform: linux/arm64
+      manual_command_thread:
       build:
-        context: .
-        dockerfile: manualCommandThread/Dockerfile
+        context: ./manualCommandThread
+        dockerfile: Dockerfile
       container_name: roverpi-manual_command_thread
       privileged: true
       stdin_open: true

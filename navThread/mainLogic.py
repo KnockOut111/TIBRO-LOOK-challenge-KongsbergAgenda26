@@ -36,7 +36,7 @@ class MainLogicNode(Node):
         self.create_subscription(String, "/rover/command", self.command_callback, 10)
 
         # Publishers
-        self.shutdown_pub = self.create_publisher(String, "/rover/system_shutdown", 10)
+        self.obstacleDetect_pub = self.create_publisher(String, "/sensors/obstacle_state", 10)
 
 
         self.init_roverPi()

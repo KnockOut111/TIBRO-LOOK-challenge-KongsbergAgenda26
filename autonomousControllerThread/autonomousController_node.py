@@ -52,7 +52,7 @@ class AutonomousController(Node):
         self.create_subscription(String, "/rover/mainMode", self.main_mode_callback, 10)
         self.create_subscription(Imu, "/sensors/imu_68", self.imu_callback, 10)
         self.create_subscription(Imu, "/sensors/imu_69", self.imu_callback, 10)
-        self.create_subscription(String, "/sensors/obstacle_state", self.obstacle_callback, 10)
+        self.create_subscription(String, "/sensors/obstacle_detected", self.obstacle_callback, 10)
         self.create_subscription(String, "metal_sensor/metal_detected", self.metal_callback, 10)
 
         # FSM
