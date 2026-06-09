@@ -8,6 +8,7 @@ from rclpy.executors import ExternalShutdownException
 from std_msgs.msg import String
 from sensor_msgs.msg import Imu
 
+from locomotionController import LocomotionController
 
 TICK_PERIOD_S = 0.1
 
@@ -35,10 +36,25 @@ class RecoverySubState(Enum):
     TURNING = auto()
     RESUMING = auto()
 
+class LocomotionModes(Enum):
+    ACKERMANN = 0
+    POINT_TURN = 1
+    CRABBING = 2
+
+class SteeringServos(Enum):
+    FL = 6
+    FR = 9
+    CL = 7
+    CR = 10
+    RL = 8
+    RR = 11
+
 #Se på logikken med obstacle detected og metal detected!
 class AutonomousController(Node):
     def __init__(self):
         super().__init__("autonomous_controller_node")
+        
+        self.controller = LocomotionController()
 
         # pubs
         self.mainState_pub = self.create_publisher(String, "/rover/mainMode", 10)
@@ -74,6 +90,13 @@ class AutonomousController(Node):
         self.get_logger().info("AutonomousController running. Waiting for arm + start.")
 
         # callbacks
+    # def forward(self):
+    #     if self.locomotion_mode == LocomotionModes.CRABBING:
+    #             self.controller.crab_straight()
+
+    #         self.controller.forward()
+    #         self.get_logger().info("Moving forward")
+
     def imu_callback(self, msg):
         self.latest_imu[msg.header.frame_id] = msg
 
@@ -164,7 +187,8 @@ class AutonomousController(Node):
         pitch = self.current_pitch()
         if pitch is None:
             # No IMU yet — drive forward cautiously to leave the ramp.
-            self.set_command("forward")
+            #self.set_command("forward")
+            self.controller.forward()
             return
 
         if abs(pitch) > RAMP_PITCH_THRESHOLD_RAD:
