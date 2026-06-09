@@ -95,8 +95,8 @@ class MainLogicNode(Node):
     def camera2_calibration(self):
         self.get_logger().info("Starting rasPi cam module2 calibraiton sequence")
     
-    def imu_calibration(self):
-        self.get_logger().info("Starting IMU calibraiton sequence")
+    # def imu_calibration(self):
+    #     self.get_logger().info("Starting IMU calibraiton sequence")
 
 
 ########### Helper functions ################################################################
