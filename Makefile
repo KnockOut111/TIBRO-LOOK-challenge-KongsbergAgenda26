@@ -166,21 +166,3 @@ picam-detect-logs:
 	docker compose -f docker-compose-server.yml logs -f picam_detect_server
 
 #############################
-roverpi-startsys-no-picam:
-	command:
-		- bash
-		- -lc
-		- |
-			source /opt/ros/jazzy/setup.bash
-			ros2 launch realsense2_camera rs_launch.py \
-			camera_namespace:=camera \
-			camera_name:=camera \
-			depth_module.depth_profile:=640x480x15 \
-			depth_module.infra_profile:=640x480x15 \
-			enable_depth:=true \
-			enable_infra1:=true \
-			enable_infra2:=true \
-			pointcloud.enable:=true \
-			spatial_filter.enable:=true \
-			temporal_filter.enable:=true \
-			hole_filling_filter.enable:=true
