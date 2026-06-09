@@ -79,7 +79,6 @@ services:
 
   manual_command_thread:
       platform: linux/arm64
-      manual_command_thread:
       build:
         context: ./manualCommandThread
         dockerfile: Dockerfile
