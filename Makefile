@@ -165,3 +165,22 @@ picam-detect-clean:
 picam-detect-logs:
 	docker compose -f docker-compose-server.yml logs -f picam_detect_server
 
+#############################
+roverpi-startsys-no-picam:
+	docker compose build \
+		nav_thread \
+		autonomous_controller_thread \
+		metal_sensor_thread \
+		imu_sensor_thread \
+		manual_command_thread \
+		realsense_camera_thread
+
+	docker compose up -d \
+		nav_thread \
+		autonomous_controller_thread \
+		metal_sensor_thread \
+		imu_sensor_thread \
+		manual_command_thread \
+		realsense_camera_thread
+
+	docker compose logs -f
