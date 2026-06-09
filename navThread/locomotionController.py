@@ -194,7 +194,7 @@ class LocomotionController():
     def stopWait(self):
         self.start_event.set()
     
-    def startWait(self)
+    def startWait(self):
         self.start_event.wait()
 
 
