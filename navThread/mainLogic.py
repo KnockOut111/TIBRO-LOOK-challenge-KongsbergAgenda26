@@ -232,7 +232,7 @@ class MainLogicNode(Node):
                 self.controller.backward()
                 self.get_logger().info("Crabbing left")
             elif self.locomotion_mode == LocomotionModes.POINT_TURN:
-                self.controller.forward_pointTurn_left
+                self.controller.forward_pointTurn_left()
                 self.get_logger().info("Turning right")
             else:
                 self.controller.left_turn()
@@ -255,7 +255,7 @@ class MainLogicNode(Node):
                 self.controller.forward()
                 self.get_logger().info("Crabbing right")
             elif self.locomotion_mode == LocomotionModes.POINT_TURN:
-                self.controller.forward_pointTurn_right
+                self.controller.forward_pointTurn_right()
                 self.get_logger().info("Turning left in point_mode")
             else:
                 self.controller.right_turn()

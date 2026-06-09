@@ -38,6 +38,7 @@ class LocomotionController():
         self.RIGHT_FORWARD = 1
         self.RIGHT_BACKWARD = 0
 
+        #kan vi fjærne?
         self.steering_neutral = {
             SteeringServos.FL: 90,
             SteeringServos.FR: 30,
@@ -202,9 +203,7 @@ class LocomotionController():
         else:
             self.reset_to_neutral()
 
-    ##########@@@@@@ Need to adjus these angles for correct behavor
-    # Only turn on the spot, so need only to know how long to turn or how many rounds wheels need to turn
-    def point_turn(self):
+    # Only turn on the spot
         target_angles = {
             SteeringServos.FL: 140,
             SteeringServos.FR: 100,
@@ -217,13 +216,12 @@ class LocomotionController():
         for wheel, angle in target_angles.items():
             self.set_wheel_steering(wheel, angle)
         
-        while True:
-            if self.pointTurn_left_bool == True:
-                self.forward_pointTurn_left()
-            elif self.pointTurn_right_bool == True:
-                self.forward_pointTurn_right()
-            else:
-                self.get_logger().info("Waiting for pointTurn_left_bool to be set True.")
+        if self.pointTurn_left_bool == True:
+            self.forward_pointTurn_left()
+        elif self.pointTurn_right_bool == True:
+            self.forward_pointTurn_right()
+        else:
+            self.get_logger().info("Waiting for pointTurn_left_bool to be set True.")
 
 
     # Only pointed forward or 90 deg sideways.
