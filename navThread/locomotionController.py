@@ -1,7 +1,7 @@
 from enum import Enum
 from adafruit_servokit import ServoKit
 import json
-
+from threading import Event
 
 class LocomotionModes(Enum):
     ACKERMANN = 0
@@ -23,6 +23,8 @@ class LocomotionController():
         self.drive_motors_left = [self.kit.continuous_servo[i] for i in range(3)]
         self.drive_motors_right = [self.kit.continuous_servo[i] for i in range(3, 6)]
         self.steering_servos = [self.kit.servo[i] for i in range(6, 12)]
+
+        self.start_event = Event()
 
         self.mode = LocomotionModes.ACKERMANN
 
@@ -180,10 +182,21 @@ class LocomotionController():
     def right_turn(self):
         self.wheelState_crabbing = False
         self.right_turn_ack = True
+        self.stopWait()
 
     def left_turn(self):
         self.wheelState_crabbing = False
         self.left_turn_ack = True
+        self.stopWait()
+
+
+# Helpers
+    def stopWait(self):
+        self.start_event.set()
+    
+    def startWait(self)
+        self.start_event.wait()
+
 
 
 
@@ -203,6 +216,7 @@ class LocomotionController():
         else:
             self.reset_to_neutral()
 
+    def point_turn(self):
     # Only turn on the spot
         target_angles = {
             SteeringServos.FL: 140,
@@ -216,12 +230,13 @@ class LocomotionController():
         for wheel, angle in target_angles.items():
             self.set_wheel_steering(wheel, angle)
         
+        self.startWait()
+
         if self.pointTurn_left_bool == True:
             self.forward_pointTurn_left()
         elif self.pointTurn_right_bool == True:
             self.forward_pointTurn_right()
-        else:
-            self.get_logger().info("Waiting for pointTurn_left_bool to be set True.")
+        
 
 
     # Only pointed forward or 90 deg sideways.
