@@ -23,4 +23,4 @@ COPY . .
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/usr/lib/python3/dist-packages:/app
 
-CMD ["bash", "-lc", "source /opt/ros/jazzy/setup.bash && python3 -u picamThread.py"]
+CMD ["bash", "-lc", "source /opt/ros/jazzy/setup.bash && export PYTHONPATH=/usr/lib/python3/dist-packages:/app:$PYTHONPATH && python3 -u picamThread.py"]

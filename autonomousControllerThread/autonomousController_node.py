@@ -175,8 +175,8 @@ class AutonomousController(Node):
 
     def tick_scanning(self):
         if self.elapsed_in_state() < 0.2:
-            self.set_command("left_turn")
             self.set_loco_mode("point_turn")
+            self.set_command("left_turn")
             return
 
         if self.elapsed_in_state() >= SCAN_DURATION_S:

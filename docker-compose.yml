@@ -37,6 +37,7 @@ services:
       - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
     command: python3 -u autonomousController_node.py
 
+
   metal_sensor_thread:
     platform: linux/arm64
     build:
@@ -55,6 +56,7 @@ services:
       - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
     command: python3 -u metalSensorLogic.py
   
+
   imu_sensor_thread:
     platform: linux/arm64
     build:
@@ -66,7 +68,6 @@ services:
       - /dev/i2c-1:/dev/i2c-1
       - /dev/gpiomem:/dev/gpiomem
       - /dev/gpiochip0:/dev/gpiochip0
-
     volumes:
       - ./sensorThread:/app
     environment:
@@ -83,7 +84,8 @@ services:
         dockerfile: manualCommandThread/Dockerfile
       container_name: roverpi-manual_command_thread
       privileged: true
-
+      stdin_open: true
+      tty: true
       volumes:
         - ./manualCommandThread:/app
       environment:
@@ -91,6 +93,8 @@ services:
         - PYTHONPATH=/app
         - BLINKA_FORCECHIP=BCM2XXX
       command: python3 -u manualcommands.py
+  
+
   picam_thread:
     platform: linux/arm64
     build:
@@ -107,12 +111,12 @@ services:
       - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
     command: bash -lc "source /opt/ros/jazzy/setup.bash && python3 -u picamThread.py"
 
+
 # RealSense D421 wrapper. Publishes standard depth/IR/image topics and services.
   realsense_camera_thread:
-    platform: linux/arm64
     build:
-      context: .
-      dockerfile: mappingThread-Local/Dockerfile
+      context: ./mappingThread-Local
+      dockerfile: Dockerfile
     container_name: roverpi-realsense_camera_thread
     privileged: true
     network_mode: host
@@ -122,7 +126,7 @@ services:
       - PYTHONUNBUFFERED=1
       - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
     command: >
-      bash -lc "ros2 launch realsense2_camera rs_launch.py
+      bash -lc "source /opt/ros/jazzy/setup.bash && ros2 launch realsense2_camera rs_launch.py"
       camera_namespace:=camera
       camera_name:=camera
       depth_module.depth_profile:=640x480x15

@@ -121,7 +121,7 @@ class LocomotionController():
             #else:
                 #self.set_wheel_steering(wheel, neutral_angle - 90)
 
-    def crab_sideways(self):
+    def crab_sideways(self): #####@@@@@ Here if crabbing is wrong sideways!!!
         target_angles = {
             SteeringServos.FL: self.steering_neutral[SteeringServos.FL] + 90,
             SteeringServos.CL: self.steering_neutral[SteeringServos.CL] - 90,
@@ -132,8 +132,8 @@ class LocomotionController():
             SteeringServos.RR: self.steering_neutral[SteeringServos.RR] + 90,
         }
 
-    for wheel, angle in target_angles.items():
-        self.set_wheel_steering(wheel, angle)
+        for wheel, angle in target_angles.items():
+            self.set_wheel_steering(wheel, angle)
 
     # Setting one wheel to a given angle
     def set_wheel_steering(self, wheel: SteeringServos, angle: int):
@@ -217,10 +217,13 @@ class LocomotionController():
         for wheel, angle in target_angles.items():
             self.set_wheel_steering(wheel, angle)
         
-        if self.pointTurn_left_bool == True:
-            self.forward_pointTurn_left()
-        elif self.pointTurn_right_bool == True:
-            self.forward_pointTurn_right()
+        while True:
+            if self.pointTurn_left_bool == True:
+                self.forward_pointTurn_left()
+            elif self.pointTurn_right_bool == True:
+                self.forward_pointTurn_right()
+            else:
+                self.get_logger().info("Waiting for pointTurn_left_bool to be set True.")
 
 
     # Only pointed forward or 90 deg sideways.
