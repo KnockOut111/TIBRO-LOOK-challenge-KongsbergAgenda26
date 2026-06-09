@@ -167,20 +167,20 @@ picam-detect-logs:
 
 #############################
 roverpi-startsys-no-picam:
-	docker compose build \
-		nav_thread \
-		autonomous_controller_thread \
-		metal_sensor_thread \
-		imu_sensor_thread \
-		manual_command_thread \
-		realsense_camera_thread
-
-	docker compose up -d \
-		nav_thread \
-		autonomous_controller_thread \
-		metal_sensor_thread \
-		imu_sensor_thread \
-		manual_command_thread \
-		realsense_camera_thread
-
-	docker compose logs -f
+	command:
+		- bash
+		- -lc
+		- |
+			source /opt/ros/jazzy/setup.bash
+			ros2 launch realsense2_camera rs_launch.py \
+			camera_namespace:=camera \
+			camera_name:=camera \
+			depth_module.depth_profile:=640x480x15 \
+			depth_module.infra_profile:=640x480x15 \
+			enable_depth:=true \
+			enable_infra1:=true \
+			enable_infra2:=true \
+			pointcloud.enable:=true \
+			spatial_filter.enable:=true \
+			temporal_filter.enable:=true \
+			hole_filling_filter.enable:=true
