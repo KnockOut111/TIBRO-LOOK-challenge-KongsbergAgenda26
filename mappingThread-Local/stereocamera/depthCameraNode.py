@@ -14,13 +14,10 @@ class DepthObstacleNode(Node):
         #Defining subscribers
         self.create_subscription( String, "/rover/system_shutdown", self.shutdown_callback, 10)
 
-        self.obsticle_detected_pub = self.create_publisher(String, "/sensors/obstacle_detected", 10)
-
-
         self.declare_parameter("depth_topic", "/camera/camera/depth/image_rect_raw")
         self.declare_parameter("obstacle_topic", "/sensors/obstacle_state")
         self.declare_parameter("stop_distance_m", 0.8)
-        self.declare_parameter("clear_distance_m", 1.0)
+        self.declare_parameter("clear_distance_m", 0.5)
         self.declare_parameter("sample_radius_px", 10)
 
         self.stop_dist = self.get_parameter("stop_distance_m").value
