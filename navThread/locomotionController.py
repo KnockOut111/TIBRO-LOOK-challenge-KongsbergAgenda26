@@ -207,7 +207,7 @@ class LocomotionController():
     def point_turn(self):
         target_angles = {
             SteeringServos.FL: 140,
-            SteeringServos.FR: 45,
+            SteeringServos.FR: 15,
             SteeringServos.CL: 90,
             SteeringServos.CR: 90,
             SteeringServos.RL: 40,
